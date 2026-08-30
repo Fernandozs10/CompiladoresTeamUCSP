@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Empaquetados generados (el código fuente ya está versionado)
+*.zip
+
+# Editores / SO
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Markdown suelto, pero conservando los README
+*.md
+!README.md
+!**/README.md
