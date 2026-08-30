@@ -1,7 +1,6 @@
 # Scanner de ChocoPy v2.2
 
-Analizador léxico (scanner) para el lenguaje **ChocoPy v2.2**, escrito
-**en Python puro y a mano** (sin generadores tipo `lex`/`flex`/JFlex).
+Analizador léxico (scanner) para el lenguaje **ChocoPy v2.2**, Python puro (sin generadores tipo `lex`/`flex`/JFlex).
 Implementa la Sección 3 ("Lexical structure") del
 *ChocoPy Language Manual and Reference*.
 
