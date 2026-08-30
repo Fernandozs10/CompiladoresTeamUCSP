@@ -14,9 +14,9 @@ proyectos extra** que se van pidiendo en clase.
 
 | Nombre | Rol en el equipo |
 |---|---|
-| **Eduardo Jacob Cruz Laura** | Desarrollo · revisión |
-| **Alexander Carpio Mamani** | Desarrollo · revisión |
-| **Fernando Abraham Zegarra Maratuech** | Desarrollo · mantenimiento del repo |
+| **Eduardo Jacob Cruz Laura** | Desarrollo |
+| **Alexander Carpio Mamani** | Desarrollo |
+| **Fernando Abraham Zegarra Maratuech** | Desarrollo |
 
 Todos los integrantes participan en diseño, implementación y pruebas. Los roles
 son orientativos y rotan según la fase del proyecto.
