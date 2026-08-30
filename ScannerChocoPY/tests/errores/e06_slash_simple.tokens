@@ -1,0 +1,9 @@
+1:1	ID	x
+1:2	COLON
+1:4	ID	int
+1:8	ASSIGN
+1:10	INTEGER	6
+1:14	INTEGER	2
+1:15	NEWLINE
+2:1	EOF
+ERROR	1:12	operador '/' no soportado en ChocoPy (usa '//')

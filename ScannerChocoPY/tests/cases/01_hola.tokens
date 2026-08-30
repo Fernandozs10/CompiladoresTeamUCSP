@@ -1,0 +1,6 @@
+1:1	ID	print
+1:6	LPAREN
+1:7	STRING	'Hello World'
+1:20	RPAREN
+1:21	NEWLINE
+2:1	EOF

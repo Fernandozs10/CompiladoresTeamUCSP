@@ -1,0 +1,8 @@
+1:1	ID	s
+1:2	COLON
+1:4	ID	str
+1:8	ASSIGN
+1:10	STRING	'Hello'
+1:18	NEWLINE
+2:1	EOF
+ERROR	1:15	secuencia de escape ilegal '\o'
