@@ -1,0 +1,14 @@
+# Binarios y objetos de compilacion
+bin/
+build/
+*.o
+*.obj
+*.exe
+*.pdb
+*.ilk
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile.cmake

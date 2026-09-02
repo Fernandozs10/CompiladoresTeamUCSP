@@ -32,6 +32,7 @@ CompiladoresTeamUCSP/
 │   ├── chocopy_language_reference.(md|pdf)   # manual de ChocoPy v2.2
 │   └── Compilers (10).(md|pdf)               # diapositivas "Scanners"
 ├── ScannerChocoPY/            # Tarea 1 — analizador léxico de ChocoPy (Python)
+├── ScannerChocoPyCpp/         # Tarea 1 — la misma tarea portada a C++17
 ├── Ejercicios/                # ejercicios cortos de clase
 │   └── Ejercicio 1 - LL(1)/
 └── ProyectoFinal/            # (en construcción) compilador completo de ChocoPy
