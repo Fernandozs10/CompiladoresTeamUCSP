@@ -1,5 +1,5 @@
 #include "scanner.h"
-
+#include <iostream>
 #include <map>
 
 namespace {
@@ -93,13 +93,22 @@ Scanner::Scanner(CodeStr source, bool strict)
 void Scanner::error(const std::string& msg, int line, int col) {
     if (strict_) throw LexError(msg, line, col);
     errors_.push_back(LexErrorInfo{msg, line, col});
+    std::cout << "ERROR SCAN - " << msg << " (" << line << ":" << col << ")" << std::endl;
 }
 
-void Scanner::emit(Token t) { tokens_.push_back(std::move(t)); }
+void Scanner::emit(Token t, const CodeStr& lexeme) {
+    std::cout << "DEBUG SCAN - " << t.type
+              << " [ " << utf8Encode(lexeme) << " ]"
+              << " (" << t.line << ":" << t.col << ")"
+              << std::endl;
+
+    tokens_.push_back(std::move(t));
+}
 
 // -- API publica -------------------------------------------------------
 
 const std::vector<Token>& Scanner::tokenize() {
+    std::cout << "INFO SCAN - Start scanning..." << "\n";
     int lastLineno = 0;
 
     for (const auto& entry : physicalLines(source_)) {
@@ -122,16 +131,16 @@ const std::vector<Token>& Scanner::tokenize() {
         // Es una linea logica (Reference 3.1.2).
         handleIndent(indent, lineno);
         scanLine(lineno, text, i);
-        emit(Token::plain("NEWLINE", lineno, static_cast<int>(n) + 1));
+        emit(Token::plain("NEWLINE", lineno, static_cast<int>(n) + 1),U"\\n");
     }
 
     // Fin de la entrada: un DEDENT por cada nivel > 0 (Reference 3.1.5).
     const int eofLine = lastLineno + 1;
     while (indents_.size() > 1) {
         indents_.pop_back();
-        emit(Token::plain("DEDENT", eofLine, 1));
+        emit(Token::plain("DEDENT", eofLine, 1), U"<dedent>");
     }
-    emit(Token::plain("EOF", eofLine, 1));
+    emit(Token::plain("EOF", eofLine, 1), U"<eof>");
     return tokens_;
 }
 
@@ -142,12 +151,12 @@ void Scanner::handleIndent(int indent, int lineno) {
     if (indent == top) return;
     if (indent > top) {
         indents_.push_back(indent);
-        emit(Token::plain("INDENT", lineno, 1));
+        emit(Token::plain("INDENT", lineno, 1), U"<indent>");
         return;
     }
     while (indents_.size() > 1 && indents_.back() > indent) {
         indents_.pop_back();
-        emit(Token::plain("DEDENT", lineno, 1));
+        emit(Token::plain("DEDENT", lineno, 1), U"<dedent>");
     }
     if (indents_.back() != indent) {
         error("nivel de indentacion inconsistente", lineno, 1);
@@ -180,10 +189,11 @@ void Scanner::scanLine(int lineno, const CodeStr& text, size_t i) {
             size_t j = i + 1;
             while (j < n && isIdentPart(text[j])) j += 1;
             const std::string word = utf8Encode(text.substr(i, j - i));
+            CodeStr lexeme = text.substr(i, j - i);
             if (isKeyword(word)) {
-                emit(Token::plain(asciiUpper(word), lineno, col));
+                emit(Token::plain(asciiUpper(word), lineno, col), lexeme);
             } else {
-                emit(Token::text("ID", text.substr(i, j - i), lineno, col));
+                emit(Token::text("ID", lexeme, lineno, col), lexeme);
             }
             i = j;
             continue;
@@ -198,14 +208,14 @@ size_t Scanner::scanOperator(int lineno, const CodeStr& text, size_t i) {
     const CodeStr two = text.substr(i, 2);
     const auto it2 = op2().find(two);
     if (two.size() == 2 && it2 != op2().end()) {
-        emit(Token::plain(it2->second, lineno, col));
+        emit(Token::plain(it2->second, lineno, col), two);
         return i + 2;
     }
 
     const char32_t one = text[i];
     const auto it1 = op1().find(one);
     if (it1 != op1().end()) {
-        emit(Token::plain(it1->second, lineno, col));
+        emit(Token::plain(it1->second, lineno, col), CodeStr(1, one));
         return i + 1;
     }
     if (one == U'/') {
@@ -249,7 +259,7 @@ size_t Scanner::scanNumber(int lineno, const CodeStr& text, size_t i) {
 
     // Valor de recuperacion: el entero si es representable, si no INT_MAX.
     emit(Token::integer("INTEGER", inRange ? value : INT_MAX_CHOCOPY, lineno,
-                        col));
+                        col), lexemeCp);
     return j;
 }
 
@@ -264,9 +274,9 @@ size_t Scanner::scanString(int lineno, const CodeStr& text, size_t i) {
         const char32_t ch = text[j];
         if (ch == U'"') {
             if (!hadError && isIdentifier(out)) {
-                emit(Token::text("IDSTRING", out, lineno, col));
+                emit(Token::text("IDSTRING", out, lineno, col),text.substr(i, j - i + 1));
             } else {
-                emit(Token::text("STRING", out, lineno, col));
+                emit(Token::text("STRING", out, lineno, col), text.substr(i, j - i + 1));
             }
             return j + 1;
         }
@@ -302,6 +312,6 @@ size_t Scanner::scanString(int lineno, const CodeStr& text, size_t i) {
     }
 
     error("string literal sin terminar", lineno, col);
-    emit(Token::text("STRING", out, lineno, col));
+    emit(Token::text("STRING", out, lineno, col), text.substr(i, n - i));
     return n;
 }

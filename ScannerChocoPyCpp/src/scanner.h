@@ -61,8 +61,7 @@ public:
 private:
     // -- utilidades internas ----------------------------------------
     void error(const std::string& msg, int line, int col);
-    void emit(Token t);
-
+    void emit(Token t, const CodeStr& lexeme);
     // -- estructura de lineas ---------------------------------------
     void handleIndent(int indent, int lineno);
 

@@ -98,13 +98,14 @@ int main(int argc, char** argv) {
         usage();
         return 2;
     }
-
+    //! se realiza una carga completa del archivo en memoria (getchar() y peekchar() no se usan) 
     std::string bytes;
     if (!readFileBinary(path, &bytes)) {
         std::cerr << "no se pudo abrir el archivo: " << path << "\n";
         return 2;
     }
-
+    //! en este caso usamos la clase scanner y funcion tokenize() en vez de la funcion getttoken()
+    
     Scanner sc(utf8Decode(bytes), strict);
     try {
         sc.tokenize();
