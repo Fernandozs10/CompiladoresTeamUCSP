@@ -22,4 +22,4 @@ enable_testing()
 add_executable(parser_unit_tests test/run_tests.cpp)
 target_link_libraries(parser_unit_tests PRIVATE parser_core)
 add_test(NAME parser_tests
-         COMMAND parser_unit_tests "${CMAKE_CURRENT_SOURCE_DIR}/test/cases/prueba1.txt")
+         COMMAND parser_unit_tests "${CMAKE_CURRENT_SOURCE_DIR}/test/cases")

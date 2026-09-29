@@ -1,0 +1,3 @@
+G -> P | P G
+P -> id : R
+R -> epsilon | id R

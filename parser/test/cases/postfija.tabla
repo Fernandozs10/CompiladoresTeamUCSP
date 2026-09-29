@@ -1,0 +1,11 @@
+estado	eof	+	*	a	S
+0				s2	1
+1	acc			s4	3
+2	r3			r3	
+3		s6	s7	s4	5
+4		r3	r3	r3	
+5		s8	s9	s4	5
+6	r1			r1	
+7	r2			r2	
+8		r1	r1	r1	
+9		r2	r2	r2	
