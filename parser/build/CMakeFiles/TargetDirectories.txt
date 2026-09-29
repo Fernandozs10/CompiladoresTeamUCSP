@@ -1,0 +1,6 @@
+C:/Users/USUARIO/developer/compiladores/CompiladoresTeamUCSP/parser/build/CMakeFiles/parser_core.dir
+C:/Users/USUARIO/developer/compiladores/CompiladoresTeamUCSP/parser/build/CMakeFiles/chocopy-parser.dir
+C:/Users/USUARIO/developer/compiladores/CompiladoresTeamUCSP/parser/build/CMakeFiles/parser_unit_tests.dir
+C:/Users/USUARIO/developer/compiladores/CompiladoresTeamUCSP/parser/build/CMakeFiles/RUN_TESTS.dir
+C:/Users/USUARIO/developer/compiladores/CompiladoresTeamUCSP/parser/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/USUARIO/developer/compiladores/CompiladoresTeamUCSP/parser/build/CMakeFiles/ZERO_CHECK.dir

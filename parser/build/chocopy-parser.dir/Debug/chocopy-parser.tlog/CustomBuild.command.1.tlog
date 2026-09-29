@@ -1,0 +1,10 @@
+^C:\USERS\USUARIO\DEVELOPER\COMPILADORES\COMPILADORESTEAMUCSP\PARSER\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/USUARIO/developer/compiladores/CompiladoresTeamUCSP/parser -BC:/Users/USUARIO/developer/compiladores/CompiladoresTeamUCSP/parser/build --check-stamp-file C:/Users/USUARIO/developer/compiladores/CompiladoresTeamUCSP/parser/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

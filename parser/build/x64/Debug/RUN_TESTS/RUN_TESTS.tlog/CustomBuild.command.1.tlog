@@ -1,0 +1,10 @@
+^C:\USERS\USUARIO\DEVELOPER\COMPILADORES\COMPILADORESTEAMUCSP\PARSER\BUILD\CMAKEFILES\FAFF0D98A5CE9EDD60EAD0A705704018\RUN_TESTS_FORCE.RULE
+setlocal
+cd .
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

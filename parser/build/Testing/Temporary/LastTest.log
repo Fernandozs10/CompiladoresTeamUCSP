@@ -1,0 +1,19 @@
+Start testing: Sep 29 01:01 SA Pacific Standard Time
+----------------------------------------------------------
+1/1 Testing: parser_tests
+1/1 Test: parser_tests
+Command: "C:/Users/USUARIO/developer/compiladores/CompiladoresTeamUCSP/parser/build/Debug/parser_unit_tests.exe" "C:/Users/USUARIO/developer/compiladores/CompiladoresTeamUCSP/parser/test/cases/prueba1.txt"
+Directory: C:/Users/USUARIO/developer/compiladores/CompiladoresTeamUCSP/parser/build
+"parser_tests" start time: Sep 29 01:01 SA Pacific Standard Time
+Output:
+----------------------------------------------------------
+Todas las pruebas del parser pasaron.
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"parser_tests" end time: Sep 29 01:01 SA Pacific Standard Time
+"parser_tests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Sep 29 01:01 SA Pacific Standard Time
