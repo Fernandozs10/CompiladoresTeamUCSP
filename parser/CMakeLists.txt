@@ -16,6 +16,7 @@ endif()
 
 add_executable(chocopy-parser src/main.cpp)
 target_link_libraries(chocopy-parser PRIVATE parser_core)
+configure_file(src/compiladores.txt compiladores.txt COPYONLY)
 
 enable_testing()
 add_executable(parser_unit_tests test/run_tests.cpp)

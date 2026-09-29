@@ -19,3 +19,7 @@ Thumbs.db
 !**/README.md
 
 ScannerChocoPY/
+
+# Builds locales del parser (CMake)
+/parser/build/
+/parser/build-*/
