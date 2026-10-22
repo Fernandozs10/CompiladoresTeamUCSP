@@ -1,0 +1,76 @@
+program -> top_level_list stmt_list
+
+top_level_list -> top_level top_level_list
+top_level_list -> ''
+
+top_level -> var_def
+top_level -> func_def
+top_level -> class_def
+
+class_def -> class ID ( ID ) : NEWLINE INDENT class_body DEDENT
+
+class_body -> pass NEWLINE
+class_body -> class_body_decl class_body_decls_tail
+
+class_body_decl -> var_def
+class_body_decl -> func_def
+
+class_body_decls_tail -> class_body_decl class_body_decls_tail
+class_body_decls_tail -> ''
+
+func_def -> def ID ( params_opt ) return_type_opt : NEWLINE INDENT func_body DEDENT
+
+params_opt -> typed_var params_tail
+params_opt -> ''
+
+params_tail -> , typed_var params_tail
+params_tail -> ''
+
+return_type_opt -> -> type
+return_type_opt -> ''
+
+expr -> not expr expr_tail
+expr -> cexpr expr_tail
+
+expr_tail -> and expr expr_tail
+expr_tail -> or expr expr_tail
+expr_tail -> if expr else expr expr_tail
+expr_tail -> ''
+
+cexpr -> ID cexpr_id_tail cexpr_tail
+cexpr -> literal cexpr_tail
+cexpr -> [ expr_list_opt ] cexpr_tail
+cexpr -> ( expr ) cexpr_tail
+cexpr -> - cexpr cexpr_tail
+
+cexpr_id_tail -> ( expr_list_opt )
+cexpr_id_tail -> ''
+
+cexpr_tail -> . ID cexpr_tail
+cexpr_tail -> [ expr ] cexpr_tail
+cexpr_tail -> ( expr_list_opt ) cexpr_tail
+cexpr_tail -> bin_op cexpr cexpr_tail
+cexpr_tail -> ''
+
+expr_list_opt -> expr expr_list_tail
+expr_list_opt -> ''
+
+expr_list_tail -> , expr expr_list_tail
+expr_list_tail -> ''
+
+bin_op -> +
+bin_op -> -
+bin_op -> *
+bin_op -> //
+bin_op -> %
+bin_op -> ==
+bin_op -> !=
+bin_op -> <=
+bin_op -> >=
+bin_op -> <
+bin_op -> >
+bin_op -> is
+
+target -> ID
+target -> cexpr . ID
+target -> cexpr [ expr ]

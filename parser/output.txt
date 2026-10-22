@@ -1,0 +1,1274 @@
+./build/chocopy-parser src/compiladores.txt
+Cargando gramática desde: src/compiladores.txt ...
+
+--- Gramática Cargada (Aumentada) ---
+  [0] S' -> S 
+  [1] S -> S + T 
+  [2] S -> S - T 
+  [3] S -> T 
+  [4] T -> T * F 
+  [5] T -> T / F 
+  [6] T -> T % F 
+  [7] T -> F 
+  [8] F -> - F 
+  [9] F -> G 
+  [10] G -> ( S ) 
+  [11] G -> num 
+  [12] G -> id 
+
+--- Conjuntos FIRST ---
+FIRST(F) = { (, -, id, num }
+FIRST(G) = { (, id, num }
+FIRST(S) = { (, -, id, num }
+FIRST(S') = { (, -, id, num }
+FIRST(T) = { (, -, id, num }
+FIRST(eof) = { eof }
+FIRST(%) = { % }
+FIRST(() = { ( }
+FIRST()) = { ) }
+FIRST(*) = { * }
+FIRST(+) = { + }
+FIRST(-) = { - }
+FIRST(/) = { / }
+FIRST(id) = { id }
+FIRST(num) = { num }
+
+--- Colección Canónica LR(1) ---
+cc0:
+    [S' -> • S, eof]
+    [S -> • S + T, eof]
+    [S -> • S + T, +]
+    [S -> • S + T, -]
+    [S -> • S - T, eof]
+    [S -> • S - T, +]
+    [S -> • S - T, -]
+    [S -> • T, eof]
+    [S -> • T, +]
+    [S -> • T, -]
+    [T -> • T * F, eof]
+    [T -> • T * F, +]
+    [T -> • T * F, -]
+    [T -> • T * F, *]
+    [T -> • T * F, /]
+    [T -> • T * F, %]
+    [T -> • T / F, eof]
+    [T -> • T / F, +]
+    [T -> • T / F, -]
+    [T -> • T / F, *]
+    [T -> • T / F, /]
+    [T -> • T / F, %]
+    [T -> • T % F, eof]
+    [T -> • T % F, +]
+    [T -> • T % F, -]
+    [T -> • T % F, *]
+    [T -> • T % F, /]
+    [T -> • T % F, %]
+    [T -> • F, eof]
+    [T -> • F, +]
+    [T -> • F, -]
+    [T -> • F, *]
+    [T -> • F, /]
+    [T -> • F, %]
+    [F -> • - F, eof]
+    [F -> • - F, +]
+    [F -> • - F, -]
+    [F -> • - F, *]
+    [F -> • - F, /]
+    [F -> • - F, %]
+    [F -> • G, eof]
+    [F -> • G, +]
+    [F -> • G, -]
+    [F -> • G, *]
+    [F -> • G, /]
+    [F -> • G, %]
+    [G -> • ( S ), eof]
+    [G -> • ( S ), +]
+    [G -> • ( S ), -]
+    [G -> • ( S ), *]
+    [G -> • ( S ), /]
+    [G -> • ( S ), %]
+    [G -> • num, eof]
+    [G -> • num, +]
+    [G -> • num, -]
+    [G -> • num, *]
+    [G -> • num, /]
+    [G -> • num, %]
+    [G -> • id, eof]
+    [G -> • id, +]
+    [G -> • id, -]
+    [G -> • id, *]
+    [G -> • id, /]
+    [G -> • id, %]
+    goto(cc0, S) = cc1
+    goto(cc0, T) = cc2
+    goto(cc0, -) = cc3
+    goto(cc0, F) = cc4
+    goto(cc0, G) = cc5
+    goto(cc0, () = cc6
+    goto(cc0, num) = cc7
+    goto(cc0, id) = cc8
+
+cc1:
+    [S' -> S •, eof]
+    [S -> S • + T, eof]
+    [S -> S • + T, +]
+    [S -> S • + T, -]
+    [S -> S • - T, eof]
+    [S -> S • - T, +]
+    [S -> S • - T, -]
+    goto(cc1, +) = cc9
+    goto(cc1, -) = cc10
+
+cc2:
+    [S -> T •, eof]
+    [S -> T •, +]
+    [S -> T •, -]
+    [T -> T • * F, eof]
+    [T -> T • * F, +]
+    [T -> T • * F, -]
+    [T -> T • * F, *]
+    [T -> T • * F, /]
+    [T -> T • * F, %]
+    [T -> T • / F, eof]
+    [T -> T • / F, +]
+    [T -> T • / F, -]
+    [T -> T • / F, *]
+    [T -> T • / F, /]
+    [T -> T • / F, %]
+    [T -> T • % F, eof]
+    [T -> T • % F, +]
+    [T -> T • % F, -]
+    [T -> T • % F, *]
+    [T -> T • % F, /]
+    [T -> T • % F, %]
+    goto(cc2, *) = cc11
+    goto(cc2, /) = cc12
+    goto(cc2, %) = cc13
+
+cc3:
+    [F -> • - F, eof]
+    [F -> • - F, +]
+    [F -> • - F, -]
+    [F -> • - F, *]
+    [F -> • - F, /]
+    [F -> • - F, %]
+    [F -> - • F, eof]
+    [F -> - • F, +]
+    [F -> - • F, -]
+    [F -> - • F, *]
+    [F -> - • F, /]
+    [F -> - • F, %]
+    [F -> • G, eof]
+    [F -> • G, +]
+    [F -> • G, -]
+    [F -> • G, *]
+    [F -> • G, /]
+    [F -> • G, %]
+    [G -> • ( S ), eof]
+    [G -> • ( S ), +]
+    [G -> • ( S ), -]
+    [G -> • ( S ), *]
+    [G -> • ( S ), /]
+    [G -> • ( S ), %]
+    [G -> • num, eof]
+    [G -> • num, +]
+    [G -> • num, -]
+    [G -> • num, *]
+    [G -> • num, /]
+    [G -> • num, %]
+    [G -> • id, eof]
+    [G -> • id, +]
+    [G -> • id, -]
+    [G -> • id, *]
+    [G -> • id, /]
+    [G -> • id, %]
+    goto(cc3, -) = cc3
+    goto(cc3, F) = cc14
+    goto(cc3, G) = cc5
+    goto(cc3, () = cc6
+    goto(cc3, num) = cc7
+    goto(cc3, id) = cc8
+
+cc4:
+    [T -> F •, eof]
+    [T -> F •, +]
+    [T -> F •, -]
+    [T -> F •, *]
+    [T -> F •, /]
+    [T -> F •, %]
+
+cc5:
+    [F -> G •, eof]
+    [F -> G •, +]
+    [F -> G •, -]
+    [F -> G •, *]
+    [F -> G •, /]
+    [F -> G •, %]
+
+cc6:
+    [S -> • S + T, +]
+    [S -> • S + T, -]
+    [S -> • S + T, )]
+    [S -> • S - T, +]
+    [S -> • S - T, -]
+    [S -> • S - T, )]
+    [S -> • T, +]
+    [S -> • T, -]
+    [S -> • T, )]
+    [T -> • T * F, +]
+    [T -> • T * F, -]
+    [T -> • T * F, *]
+    [T -> • T * F, /]
+    [T -> • T * F, %]
+    [T -> • T * F, )]
+    [T -> • T / F, +]
+    [T -> • T / F, -]
+    [T -> • T / F, *]
+    [T -> • T / F, /]
+    [T -> • T / F, %]
+    [T -> • T / F, )]
+    [T -> • T % F, +]
+    [T -> • T % F, -]
+    [T -> • T % F, *]
+    [T -> • T % F, /]
+    [T -> • T % F, %]
+    [T -> • T % F, )]
+    [T -> • F, +]
+    [T -> • F, -]
+    [T -> • F, *]
+    [T -> • F, /]
+    [T -> • F, %]
+    [T -> • F, )]
+    [F -> • - F, +]
+    [F -> • - F, -]
+    [F -> • - F, *]
+    [F -> • - F, /]
+    [F -> • - F, %]
+    [F -> • - F, )]
+    [F -> • G, +]
+    [F -> • G, -]
+    [F -> • G, *]
+    [F -> • G, /]
+    [F -> • G, %]
+    [F -> • G, )]
+    [G -> • ( S ), +]
+    [G -> • ( S ), -]
+    [G -> • ( S ), *]
+    [G -> • ( S ), /]
+    [G -> • ( S ), %]
+    [G -> • ( S ), )]
+    [G -> ( • S ), eof]
+    [G -> ( • S ), +]
+    [G -> ( • S ), -]
+    [G -> ( • S ), *]
+    [G -> ( • S ), /]
+    [G -> ( • S ), %]
+    [G -> • num, +]
+    [G -> • num, -]
+    [G -> • num, *]
+    [G -> • num, /]
+    [G -> • num, %]
+    [G -> • num, )]
+    [G -> • id, +]
+    [G -> • id, -]
+    [G -> • id, *]
+    [G -> • id, /]
+    [G -> • id, %]
+    [G -> • id, )]
+    goto(cc6, S) = cc15
+    goto(cc6, T) = cc16
+    goto(cc6, -) = cc17
+    goto(cc6, F) = cc18
+    goto(cc6, G) = cc19
+    goto(cc6, () = cc20
+    goto(cc6, num) = cc21
+    goto(cc6, id) = cc22
+
+cc7:
+    [G -> num •, eof]
+    [G -> num •, +]
+    [G -> num •, -]
+    [G -> num •, *]
+    [G -> num •, /]
+    [G -> num •, %]
+
+cc8:
+    [G -> id •, eof]
+    [G -> id •, +]
+    [G -> id •, -]
+    [G -> id •, *]
+    [G -> id •, /]
+    [G -> id •, %]
+
+cc9:
+    [S -> S + • T, eof]
+    [S -> S + • T, +]
+    [S -> S + • T, -]
+    [T -> • T * F, eof]
+    [T -> • T * F, +]
+    [T -> • T * F, -]
+    [T -> • T * F, *]
+    [T -> • T * F, /]
+    [T -> • T * F, %]
+    [T -> • T / F, eof]
+    [T -> • T / F, +]
+    [T -> • T / F, -]
+    [T -> • T / F, *]
+    [T -> • T / F, /]
+    [T -> • T / F, %]
+    [T -> • T % F, eof]
+    [T -> • T % F, +]
+    [T -> • T % F, -]
+    [T -> • T % F, *]
+    [T -> • T % F, /]
+    [T -> • T % F, %]
+    [T -> • F, eof]
+    [T -> • F, +]
+    [T -> • F, -]
+    [T -> • F, *]
+    [T -> • F, /]
+    [T -> • F, %]
+    [F -> • - F, eof]
+    [F -> • - F, +]
+    [F -> • - F, -]
+    [F -> • - F, *]
+    [F -> • - F, /]
+    [F -> • - F, %]
+    [F -> • G, eof]
+    [F -> • G, +]
+    [F -> • G, -]
+    [F -> • G, *]
+    [F -> • G, /]
+    [F -> • G, %]
+    [G -> • ( S ), eof]
+    [G -> • ( S ), +]
+    [G -> • ( S ), -]
+    [G -> • ( S ), *]
+    [G -> • ( S ), /]
+    [G -> • ( S ), %]
+    [G -> • num, eof]
+    [G -> • num, +]
+    [G -> • num, -]
+    [G -> • num, *]
+    [G -> • num, /]
+    [G -> • num, %]
+    [G -> • id, eof]
+    [G -> • id, +]
+    [G -> • id, -]
+    [G -> • id, *]
+    [G -> • id, /]
+    [G -> • id, %]
+    goto(cc9, T) = cc23
+    goto(cc9, -) = cc3
+    goto(cc9, F) = cc4
+    goto(cc9, G) = cc5
+    goto(cc9, () = cc6
+    goto(cc9, num) = cc7
+    goto(cc9, id) = cc8
+
+cc10:
+    [S -> S - • T, eof]
+    [S -> S - • T, +]
+    [S -> S - • T, -]
+    [T -> • T * F, eof]
+    [T -> • T * F, +]
+    [T -> • T * F, -]
+    [T -> • T * F, *]
+    [T -> • T * F, /]
+    [T -> • T * F, %]
+    [T -> • T / F, eof]
+    [T -> • T / F, +]
+    [T -> • T / F, -]
+    [T -> • T / F, *]
+    [T -> • T / F, /]
+    [T -> • T / F, %]
+    [T -> • T % F, eof]
+    [T -> • T % F, +]
+    [T -> • T % F, -]
+    [T -> • T % F, *]
+    [T -> • T % F, /]
+    [T -> • T % F, %]
+    [T -> • F, eof]
+    [T -> • F, +]
+    [T -> • F, -]
+    [T -> • F, *]
+    [T -> • F, /]
+    [T -> • F, %]
+    [F -> • - F, eof]
+    [F -> • - F, +]
+    [F -> • - F, -]
+    [F -> • - F, *]
+    [F -> • - F, /]
+    [F -> • - F, %]
+    [F -> • G, eof]
+    [F -> • G, +]
+    [F -> • G, -]
+    [F -> • G, *]
+    [F -> • G, /]
+    [F -> • G, %]
+    [G -> • ( S ), eof]
+    [G -> • ( S ), +]
+    [G -> • ( S ), -]
+    [G -> • ( S ), *]
+    [G -> • ( S ), /]
+    [G -> • ( S ), %]
+    [G -> • num, eof]
+    [G -> • num, +]
+    [G -> • num, -]
+    [G -> • num, *]
+    [G -> • num, /]
+    [G -> • num, %]
+    [G -> • id, eof]
+    [G -> • id, +]
+    [G -> • id, -]
+    [G -> • id, *]
+    [G -> • id, /]
+    [G -> • id, %]
+    goto(cc10, T) = cc24
+    goto(cc10, -) = cc3
+    goto(cc10, F) = cc4
+    goto(cc10, G) = cc5
+    goto(cc10, () = cc6
+    goto(cc10, num) = cc7
+    goto(cc10, id) = cc8
+
+cc11:
+    [T -> T * • F, eof]
+    [T -> T * • F, +]
+    [T -> T * • F, -]
+    [T -> T * • F, *]
+    [T -> T * • F, /]
+    [T -> T * • F, %]
+    [F -> • - F, eof]
+    [F -> • - F, +]
+    [F -> • - F, -]
+    [F -> • - F, *]
+    [F -> • - F, /]
+    [F -> • - F, %]
+    [F -> • G, eof]
+    [F -> • G, +]
+    [F -> • G, -]
+    [F -> • G, *]
+    [F -> • G, /]
+    [F -> • G, %]
+    [G -> • ( S ), eof]
+    [G -> • ( S ), +]
+    [G -> • ( S ), -]
+    [G -> • ( S ), *]
+    [G -> • ( S ), /]
+    [G -> • ( S ), %]
+    [G -> • num, eof]
+    [G -> • num, +]
+    [G -> • num, -]
+    [G -> • num, *]
+    [G -> • num, /]
+    [G -> • num, %]
+    [G -> • id, eof]
+    [G -> • id, +]
+    [G -> • id, -]
+    [G -> • id, *]
+    [G -> • id, /]
+    [G -> • id, %]
+    goto(cc11, -) = cc3
+    goto(cc11, F) = cc25
+    goto(cc11, G) = cc5
+    goto(cc11, () = cc6
+    goto(cc11, num) = cc7
+    goto(cc11, id) = cc8
+
+cc12:
+    [T -> T / • F, eof]
+    [T -> T / • F, +]
+    [T -> T / • F, -]
+    [T -> T / • F, *]
+    [T -> T / • F, /]
+    [T -> T / • F, %]
+    [F -> • - F, eof]
+    [F -> • - F, +]
+    [F -> • - F, -]
+    [F -> • - F, *]
+    [F -> • - F, /]
+    [F -> • - F, %]
+    [F -> • G, eof]
+    [F -> • G, +]
+    [F -> • G, -]
+    [F -> • G, *]
+    [F -> • G, /]
+    [F -> • G, %]
+    [G -> • ( S ), eof]
+    [G -> • ( S ), +]
+    [G -> • ( S ), -]
+    [G -> • ( S ), *]
+    [G -> • ( S ), /]
+    [G -> • ( S ), %]
+    [G -> • num, eof]
+    [G -> • num, +]
+    [G -> • num, -]
+    [G -> • num, *]
+    [G -> • num, /]
+    [G -> • num, %]
+    [G -> • id, eof]
+    [G -> • id, +]
+    [G -> • id, -]
+    [G -> • id, *]
+    [G -> • id, /]
+    [G -> • id, %]
+    goto(cc12, -) = cc3
+    goto(cc12, F) = cc26
+    goto(cc12, G) = cc5
+    goto(cc12, () = cc6
+    goto(cc12, num) = cc7
+    goto(cc12, id) = cc8
+
+cc13:
+    [T -> T % • F, eof]
+    [T -> T % • F, +]
+    [T -> T % • F, -]
+    [T -> T % • F, *]
+    [T -> T % • F, /]
+    [T -> T % • F, %]
+    [F -> • - F, eof]
+    [F -> • - F, +]
+    [F -> • - F, -]
+    [F -> • - F, *]
+    [F -> • - F, /]
+    [F -> • - F, %]
+    [F -> • G, eof]
+    [F -> • G, +]
+    [F -> • G, -]
+    [F -> • G, *]
+    [F -> • G, /]
+    [F -> • G, %]
+    [G -> • ( S ), eof]
+    [G -> • ( S ), +]
+    [G -> • ( S ), -]
+    [G -> • ( S ), *]
+    [G -> • ( S ), /]
+    [G -> • ( S ), %]
+    [G -> • num, eof]
+    [G -> • num, +]
+    [G -> • num, -]
+    [G -> • num, *]
+    [G -> • num, /]
+    [G -> • num, %]
+    [G -> • id, eof]
+    [G -> • id, +]
+    [G -> • id, -]
+    [G -> • id, *]
+    [G -> • id, /]
+    [G -> • id, %]
+    goto(cc13, -) = cc3
+    goto(cc13, F) = cc27
+    goto(cc13, G) = cc5
+    goto(cc13, () = cc6
+    goto(cc13, num) = cc7
+    goto(cc13, id) = cc8
+
+cc14:
+    [F -> - F •, eof]
+    [F -> - F •, +]
+    [F -> - F •, -]
+    [F -> - F •, *]
+    [F -> - F •, /]
+    [F -> - F •, %]
+
+cc15:
+    [S -> S • + T, +]
+    [S -> S • + T, -]
+    [S -> S • + T, )]
+    [S -> S • - T, +]
+    [S -> S • - T, -]
+    [S -> S • - T, )]
+    [G -> ( S • ), eof]
+    [G -> ( S • ), +]
+    [G -> ( S • ), -]
+    [G -> ( S • ), *]
+    [G -> ( S • ), /]
+    [G -> ( S • ), %]
+    goto(cc15, +) = cc28
+    goto(cc15, -) = cc29
+    goto(cc15, )) = cc30
+
+cc16:
+    [S -> T •, +]
+    [S -> T •, -]
+    [S -> T •, )]
+    [T -> T • * F, +]
+    [T -> T • * F, -]
+    [T -> T • * F, *]
+    [T -> T • * F, /]
+    [T -> T • * F, %]
+    [T -> T • * F, )]
+    [T -> T • / F, +]
+    [T -> T • / F, -]
+    [T -> T • / F, *]
+    [T -> T • / F, /]
+    [T -> T • / F, %]
+    [T -> T • / F, )]
+    [T -> T • % F, +]
+    [T -> T • % F, -]
+    [T -> T • % F, *]
+    [T -> T • % F, /]
+    [T -> T • % F, %]
+    [T -> T • % F, )]
+    goto(cc16, *) = cc31
+    goto(cc16, /) = cc32
+    goto(cc16, %) = cc33
+
+cc17:
+    [F -> • - F, +]
+    [F -> • - F, -]
+    [F -> • - F, *]
+    [F -> • - F, /]
+    [F -> • - F, %]
+    [F -> • - F, )]
+    [F -> - • F, +]
+    [F -> - • F, -]
+    [F -> - • F, *]
+    [F -> - • F, /]
+    [F -> - • F, %]
+    [F -> - • F, )]
+    [F -> • G, +]
+    [F -> • G, -]
+    [F -> • G, *]
+    [F -> • G, /]
+    [F -> • G, %]
+    [F -> • G, )]
+    [G -> • ( S ), +]
+    [G -> • ( S ), -]
+    [G -> • ( S ), *]
+    [G -> • ( S ), /]
+    [G -> • ( S ), %]
+    [G -> • ( S ), )]
+    [G -> • num, +]
+    [G -> • num, -]
+    [G -> • num, *]
+    [G -> • num, /]
+    [G -> • num, %]
+    [G -> • num, )]
+    [G -> • id, +]
+    [G -> • id, -]
+    [G -> • id, *]
+    [G -> • id, /]
+    [G -> • id, %]
+    [G -> • id, )]
+    goto(cc17, -) = cc17
+    goto(cc17, F) = cc34
+    goto(cc17, G) = cc19
+    goto(cc17, () = cc20
+    goto(cc17, num) = cc21
+    goto(cc17, id) = cc22
+
+cc18:
+    [T -> F •, +]
+    [T -> F •, -]
+    [T -> F •, *]
+    [T -> F •, /]
+    [T -> F •, %]
+    [T -> F •, )]
+
+cc19:
+    [F -> G •, +]
+    [F -> G •, -]
+    [F -> G •, *]
+    [F -> G •, /]
+    [F -> G •, %]
+    [F -> G •, )]
+
+cc20:
+    [S -> • S + T, +]
+    [S -> • S + T, -]
+    [S -> • S + T, )]
+    [S -> • S - T, +]
+    [S -> • S - T, -]
+    [S -> • S - T, )]
+    [S -> • T, +]
+    [S -> • T, -]
+    [S -> • T, )]
+    [T -> • T * F, +]
+    [T -> • T * F, -]
+    [T -> • T * F, *]
+    [T -> • T * F, /]
+    [T -> • T * F, %]
+    [T -> • T * F, )]
+    [T -> • T / F, +]
+    [T -> • T / F, -]
+    [T -> • T / F, *]
+    [T -> • T / F, /]
+    [T -> • T / F, %]
+    [T -> • T / F, )]
+    [T -> • T % F, +]
+    [T -> • T % F, -]
+    [T -> • T % F, *]
+    [T -> • T % F, /]
+    [T -> • T % F, %]
+    [T -> • T % F, )]
+    [T -> • F, +]
+    [T -> • F, -]
+    [T -> • F, *]
+    [T -> • F, /]
+    [T -> • F, %]
+    [T -> • F, )]
+    [F -> • - F, +]
+    [F -> • - F, -]
+    [F -> • - F, *]
+    [F -> • - F, /]
+    [F -> • - F, %]
+    [F -> • - F, )]
+    [F -> • G, +]
+    [F -> • G, -]
+    [F -> • G, *]
+    [F -> • G, /]
+    [F -> • G, %]
+    [F -> • G, )]
+    [G -> • ( S ), +]
+    [G -> • ( S ), -]
+    [G -> • ( S ), *]
+    [G -> • ( S ), /]
+    [G -> • ( S ), %]
+    [G -> • ( S ), )]
+    [G -> ( • S ), +]
+    [G -> ( • S ), -]
+    [G -> ( • S ), *]
+    [G -> ( • S ), /]
+    [G -> ( • S ), %]
+    [G -> ( • S ), )]
+    [G -> • num, +]
+    [G -> • num, -]
+    [G -> • num, *]
+    [G -> • num, /]
+    [G -> • num, %]
+    [G -> • num, )]
+    [G -> • id, +]
+    [G -> • id, -]
+    [G -> • id, *]
+    [G -> • id, /]
+    [G -> • id, %]
+    [G -> • id, )]
+    goto(cc20, S) = cc35
+    goto(cc20, T) = cc16
+    goto(cc20, -) = cc17
+    goto(cc20, F) = cc18
+    goto(cc20, G) = cc19
+    goto(cc20, () = cc20
+    goto(cc20, num) = cc21
+    goto(cc20, id) = cc22
+
+cc21:
+    [G -> num •, +]
+    [G -> num •, -]
+    [G -> num •, *]
+    [G -> num •, /]
+    [G -> num •, %]
+    [G -> num •, )]
+
+cc22:
+    [G -> id •, +]
+    [G -> id •, -]
+    [G -> id •, *]
+    [G -> id •, /]
+    [G -> id •, %]
+    [G -> id •, )]
+
+cc23:
+    [S -> S + T •, eof]
+    [S -> S + T •, +]
+    [S -> S + T •, -]
+    [T -> T • * F, eof]
+    [T -> T • * F, +]
+    [T -> T • * F, -]
+    [T -> T • * F, *]
+    [T -> T • * F, /]
+    [T -> T • * F, %]
+    [T -> T • / F, eof]
+    [T -> T • / F, +]
+    [T -> T • / F, -]
+    [T -> T • / F, *]
+    [T -> T • / F, /]
+    [T -> T • / F, %]
+    [T -> T • % F, eof]
+    [T -> T • % F, +]
+    [T -> T • % F, -]
+    [T -> T • % F, *]
+    [T -> T • % F, /]
+    [T -> T • % F, %]
+    goto(cc23, *) = cc11
+    goto(cc23, /) = cc12
+    goto(cc23, %) = cc13
+
+cc24:
+    [S -> S - T •, eof]
+    [S -> S - T •, +]
+    [S -> S - T •, -]
+    [T -> T • * F, eof]
+    [T -> T • * F, +]
+    [T -> T • * F, -]
+    [T -> T • * F, *]
+    [T -> T • * F, /]
+    [T -> T • * F, %]
+    [T -> T • / F, eof]
+    [T -> T • / F, +]
+    [T -> T • / F, -]
+    [T -> T • / F, *]
+    [T -> T • / F, /]
+    [T -> T • / F, %]
+    [T -> T • % F, eof]
+    [T -> T • % F, +]
+    [T -> T • % F, -]
+    [T -> T • % F, *]
+    [T -> T • % F, /]
+    [T -> T • % F, %]
+    goto(cc24, *) = cc11
+    goto(cc24, /) = cc12
+    goto(cc24, %) = cc13
+
+cc25:
+    [T -> T * F •, eof]
+    [T -> T * F •, +]
+    [T -> T * F •, -]
+    [T -> T * F •, *]
+    [T -> T * F •, /]
+    [T -> T * F •, %]
+
+cc26:
+    [T -> T / F •, eof]
+    [T -> T / F •, +]
+    [T -> T / F •, -]
+    [T -> T / F •, *]
+    [T -> T / F •, /]
+    [T -> T / F •, %]
+
+cc27:
+    [T -> T % F •, eof]
+    [T -> T % F •, +]
+    [T -> T % F •, -]
+    [T -> T % F •, *]
+    [T -> T % F •, /]
+    [T -> T % F •, %]
+
+cc28:
+    [S -> S + • T, +]
+    [S -> S + • T, -]
+    [S -> S + • T, )]
+    [T -> • T * F, +]
+    [T -> • T * F, -]
+    [T -> • T * F, *]
+    [T -> • T * F, /]
+    [T -> • T * F, %]
+    [T -> • T * F, )]
+    [T -> • T / F, +]
+    [T -> • T / F, -]
+    [T -> • T / F, *]
+    [T -> • T / F, /]
+    [T -> • T / F, %]
+    [T -> • T / F, )]
+    [T -> • T % F, +]
+    [T -> • T % F, -]
+    [T -> • T % F, *]
+    [T -> • T % F, /]
+    [T -> • T % F, %]
+    [T -> • T % F, )]
+    [T -> • F, +]
+    [T -> • F, -]
+    [T -> • F, *]
+    [T -> • F, /]
+    [T -> • F, %]
+    [T -> • F, )]
+    [F -> • - F, +]
+    [F -> • - F, -]
+    [F -> • - F, *]
+    [F -> • - F, /]
+    [F -> • - F, %]
+    [F -> • - F, )]
+    [F -> • G, +]
+    [F -> • G, -]
+    [F -> • G, *]
+    [F -> • G, /]
+    [F -> • G, %]
+    [F -> • G, )]
+    [G -> • ( S ), +]
+    [G -> • ( S ), -]
+    [G -> • ( S ), *]
+    [G -> • ( S ), /]
+    [G -> • ( S ), %]
+    [G -> • ( S ), )]
+    [G -> • num, +]
+    [G -> • num, -]
+    [G -> • num, *]
+    [G -> • num, /]
+    [G -> • num, %]
+    [G -> • num, )]
+    [G -> • id, +]
+    [G -> • id, -]
+    [G -> • id, *]
+    [G -> • id, /]
+    [G -> • id, %]
+    [G -> • id, )]
+    goto(cc28, T) = cc36
+    goto(cc28, -) = cc17
+    goto(cc28, F) = cc18
+    goto(cc28, G) = cc19
+    goto(cc28, () = cc20
+    goto(cc28, num) = cc21
+    goto(cc28, id) = cc22
+
+cc29:
+    [S -> S - • T, +]
+    [S -> S - • T, -]
+    [S -> S - • T, )]
+    [T -> • T * F, +]
+    [T -> • T * F, -]
+    [T -> • T * F, *]
+    [T -> • T * F, /]
+    [T -> • T * F, %]
+    [T -> • T * F, )]
+    [T -> • T / F, +]
+    [T -> • T / F, -]
+    [T -> • T / F, *]
+    [T -> • T / F, /]
+    [T -> • T / F, %]
+    [T -> • T / F, )]
+    [T -> • T % F, +]
+    [T -> • T % F, -]
+    [T -> • T % F, *]
+    [T -> • T % F, /]
+    [T -> • T % F, %]
+    [T -> • T % F, )]
+    [T -> • F, +]
+    [T -> • F, -]
+    [T -> • F, *]
+    [T -> • F, /]
+    [T -> • F, %]
+    [T -> • F, )]
+    [F -> • - F, +]
+    [F -> • - F, -]
+    [F -> • - F, *]
+    [F -> • - F, /]
+    [F -> • - F, %]
+    [F -> • - F, )]
+    [F -> • G, +]
+    [F -> • G, -]
+    [F -> • G, *]
+    [F -> • G, /]
+    [F -> • G, %]
+    [F -> • G, )]
+    [G -> • ( S ), +]
+    [G -> • ( S ), -]
+    [G -> • ( S ), *]
+    [G -> • ( S ), /]
+    [G -> • ( S ), %]
+    [G -> • ( S ), )]
+    [G -> • num, +]
+    [G -> • num, -]
+    [G -> • num, *]
+    [G -> • num, /]
+    [G -> • num, %]
+    [G -> • num, )]
+    [G -> • id, +]
+    [G -> • id, -]
+    [G -> • id, *]
+    [G -> • id, /]
+    [G -> • id, %]
+    [G -> • id, )]
+    goto(cc29, T) = cc37
+    goto(cc29, -) = cc17
+    goto(cc29, F) = cc18
+    goto(cc29, G) = cc19
+    goto(cc29, () = cc20
+    goto(cc29, num) = cc21
+    goto(cc29, id) = cc22
+
+cc30:
+    [G -> ( S ) •, eof]
+    [G -> ( S ) •, +]
+    [G -> ( S ) •, -]
+    [G -> ( S ) •, *]
+    [G -> ( S ) •, /]
+    [G -> ( S ) •, %]
+
+cc31:
+    [T -> T * • F, +]
+    [T -> T * • F, -]
+    [T -> T * • F, *]
+    [T -> T * • F, /]
+    [T -> T * • F, %]
+    [T -> T * • F, )]
+    [F -> • - F, +]
+    [F -> • - F, -]
+    [F -> • - F, *]
+    [F -> • - F, /]
+    [F -> • - F, %]
+    [F -> • - F, )]
+    [F -> • G, +]
+    [F -> • G, -]
+    [F -> • G, *]
+    [F -> • G, /]
+    [F -> • G, %]
+    [F -> • G, )]
+    [G -> • ( S ), +]
+    [G -> • ( S ), -]
+    [G -> • ( S ), *]
+    [G -> • ( S ), /]
+    [G -> • ( S ), %]
+    [G -> • ( S ), )]
+    [G -> • num, +]
+    [G -> • num, -]
+    [G -> • num, *]
+    [G -> • num, /]
+    [G -> • num, %]
+    [G -> • num, )]
+    [G -> • id, +]
+    [G -> • id, -]
+    [G -> • id, *]
+    [G -> • id, /]
+    [G -> • id, %]
+    [G -> • id, )]
+    goto(cc31, -) = cc17
+    goto(cc31, F) = cc38
+    goto(cc31, G) = cc19
+    goto(cc31, () = cc20
+    goto(cc31, num) = cc21
+    goto(cc31, id) = cc22
+
+cc32:
+    [T -> T / • F, +]
+    [T -> T / • F, -]
+    [T -> T / • F, *]
+    [T -> T / • F, /]
+    [T -> T / • F, %]
+    [T -> T / • F, )]
+    [F -> • - F, +]
+    [F -> • - F, -]
+    [F -> • - F, *]
+    [F -> • - F, /]
+    [F -> • - F, %]
+    [F -> • - F, )]
+    [F -> • G, +]
+    [F -> • G, -]
+    [F -> • G, *]
+    [F -> • G, /]
+    [F -> • G, %]
+    [F -> • G, )]
+    [G -> • ( S ), +]
+    [G -> • ( S ), -]
+    [G -> • ( S ), *]
+    [G -> • ( S ), /]
+    [G -> • ( S ), %]
+    [G -> • ( S ), )]
+    [G -> • num, +]
+    [G -> • num, -]
+    [G -> • num, *]
+    [G -> • num, /]
+    [G -> • num, %]
+    [G -> • num, )]
+    [G -> • id, +]
+    [G -> • id, -]
+    [G -> • id, *]
+    [G -> • id, /]
+    [G -> • id, %]
+    [G -> • id, )]
+    goto(cc32, -) = cc17
+    goto(cc32, F) = cc39
+    goto(cc32, G) = cc19
+    goto(cc32, () = cc20
+    goto(cc32, num) = cc21
+    goto(cc32, id) = cc22
+
+cc33:
+    [T -> T % • F, +]
+    [T -> T % • F, -]
+    [T -> T % • F, *]
+    [T -> T % • F, /]
+    [T -> T % • F, %]
+    [T -> T % • F, )]
+    [F -> • - F, +]
+    [F -> • - F, -]
+    [F -> • - F, *]
+    [F -> • - F, /]
+    [F -> • - F, %]
+    [F -> • - F, )]
+    [F -> • G, +]
+    [F -> • G, -]
+    [F -> • G, *]
+    [F -> • G, /]
+    [F -> • G, %]
+    [F -> • G, )]
+    [G -> • ( S ), +]
+    [G -> • ( S ), -]
+    [G -> • ( S ), *]
+    [G -> • ( S ), /]
+    [G -> • ( S ), %]
+    [G -> • ( S ), )]
+    [G -> • num, +]
+    [G -> • num, -]
+    [G -> • num, *]
+    [G -> • num, /]
+    [G -> • num, %]
+    [G -> • num, )]
+    [G -> • id, +]
+    [G -> • id, -]
+    [G -> • id, *]
+    [G -> • id, /]
+    [G -> • id, %]
+    [G -> • id, )]
+    goto(cc33, -) = cc17
+    goto(cc33, F) = cc40
+    goto(cc33, G) = cc19
+    goto(cc33, () = cc20
+    goto(cc33, num) = cc21
+    goto(cc33, id) = cc22
+
+cc34:
+    [F -> - F •, +]
+    [F -> - F •, -]
+    [F -> - F •, *]
+    [F -> - F •, /]
+    [F -> - F •, %]
+    [F -> - F •, )]
+
+cc35:
+    [S -> S • + T, +]
+    [S -> S • + T, -]
+    [S -> S • + T, )]
+    [S -> S • - T, +]
+    [S -> S • - T, -]
+    [S -> S • - T, )]
+    [G -> ( S • ), +]
+    [G -> ( S • ), -]
+    [G -> ( S • ), *]
+    [G -> ( S • ), /]
+    [G -> ( S • ), %]
+    [G -> ( S • ), )]
+    goto(cc35, +) = cc28
+    goto(cc35, -) = cc29
+    goto(cc35, )) = cc41
+
+cc36:
+    [S -> S + T •, +]
+    [S -> S + T •, -]
+    [S -> S + T •, )]
+    [T -> T • * F, +]
+    [T -> T • * F, -]
+    [T -> T • * F, *]
+    [T -> T • * F, /]
+    [T -> T • * F, %]
+    [T -> T • * F, )]
+    [T -> T • / F, +]
+    [T -> T • / F, -]
+    [T -> T • / F, *]
+    [T -> T • / F, /]
+    [T -> T • / F, %]
+    [T -> T • / F, )]
+    [T -> T • % F, +]
+    [T -> T • % F, -]
+    [T -> T • % F, *]
+    [T -> T • % F, /]
+    [T -> T • % F, %]
+    [T -> T • % F, )]
+    goto(cc36, *) = cc31
+    goto(cc36, /) = cc32
+    goto(cc36, %) = cc33
+
+cc37:
+    [S -> S - T •, +]
+    [S -> S - T •, -]
+    [S -> S - T •, )]
+    [T -> T • * F, +]
+    [T -> T • * F, -]
+    [T -> T • * F, *]
+    [T -> T • * F, /]
+    [T -> T • * F, %]
+    [T -> T • * F, )]
+    [T -> T • / F, +]
+    [T -> T • / F, -]
+    [T -> T • / F, *]
+    [T -> T • / F, /]
+    [T -> T • / F, %]
+    [T -> T • / F, )]
+    [T -> T • % F, +]
+    [T -> T • % F, -]
+    [T -> T • % F, *]
+    [T -> T • % F, /]
+    [T -> T • % F, %]
+    [T -> T • % F, )]
+    goto(cc37, *) = cc31
+    goto(cc37, /) = cc32
+    goto(cc37, %) = cc33
+
+cc38:
+    [T -> T * F •, +]
+    [T -> T * F •, -]
+    [T -> T * F •, *]
+    [T -> T * F •, /]
+    [T -> T * F •, %]
+    [T -> T * F •, )]
+
+cc39:
+    [T -> T / F •, +]
+    [T -> T / F •, -]
+    [T -> T / F •, *]
+    [T -> T / F •, /]
+    [T -> T / F •, %]
+    [T -> T / F •, )]
+
+cc40:
+    [T -> T % F •, +]
+    [T -> T % F •, -]
+    [T -> T % F •, *]
+    [T -> T % F •, /]
+    [T -> T % F •, %]
+    [T -> T % F •, )]
+
+cc41:
+    [G -> ( S ) •, +]
+    [G -> ( S ) •, -]
+    [G -> ( S ) •, *]
+    [G -> ( S ) •, /]
+    [G -> ( S ) •, %]
+    [G -> ( S ) •, )]
+
+--- Tablas Action y Goto ---
+estado	eof	+	-	*	/	%	(	)	num	id	S	T	F	G
+0			s3				s6		s7	s8	1	2	4	5
+1	acc	s9	s10											
+2	r3	r3	r3	s11	s12	s13								
+3			s3				s6		s7	s8			14	5
+4	r7	r7	r7	r7	r7	r7								
+5	r9	r9	r9	r9	r9	r9								
+6			s17				s20		s21	s22	15	16	18	19
+7	r11	r11	r11	r11	r11	r11								
+8	r12	r12	r12	r12	r12	r12								
+9			s3				s6		s7	s8		23	4	5
+10			s3				s6		s7	s8		24	4	5
+11			s3				s6		s7	s8			25	5
+12			s3				s6		s7	s8			26	5
+13			s3				s6		s7	s8			27	5
+14	r8	r8	r8	r8	r8	r8								
+15		s28	s29					s30						
+16		r3	r3	s31	s32	s33		r3						
+17			s17				s20		s21	s22			34	19
+18		r7	r7	r7	r7	r7		r7						
+19		r9	r9	r9	r9	r9		r9						
+20			s17				s20		s21	s22	35	16	18	19
+21		r11	r11	r11	r11	r11		r11						
+22		r12	r12	r12	r12	r12		r12						
+23	r1	r1	r1	s11	s12	s13								
+24	r2	r2	r2	s11	s12	s13								
+25	r4	r4	r4	r4	r4	r4								
+26	r5	r5	r5	r5	r5	r5								
+27	r6	r6	r6	r6	r6	r6								
+28			s17				s20		s21	s22		36	18	19
+29			s17				s20		s21	s22		37	18	19
+30	r10	r10	r10	r10	r10	r10								
+31			s17				s20		s21	s22			38	19
+32			s17				s20		s21	s22			39	19
+33			s17				s20		s21	s22			40	19
+34		r8	r8	r8	r8	r8		r8						
+35		s28	s29					s41						
+36		r1	r1	s31	s32	s33		r1						
+37		r2	r2	s31	s32	s33		r2						
+38		r4	r4	r4	r4	r4		r4						
+39		r5	r5	r5	r5	r5		r5						
+40		r6	r6	r6	r6	r6		r6						
+41		r10	r10	r10	r10	r10		r10						
+

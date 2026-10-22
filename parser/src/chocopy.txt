@@ -1,0 +1,81 @@
+program' -> program
+
+program -> def_list stmt_list
+
+def_list -> def_list def | epsilon
+def -> var_def | func_def | class_def
+
+stmt_list -> stmt_list stmt | epsilon
+
+class_def -> class ID ( ID ) : NEWLINE INDENT class_body DEDENT
+class_body -> pass NEWLINE | class_body_defs
+class_body_defs -> class_body_defs class_body_def | class_body_def
+class_body_def -> var_def | func_def
+
+func_def -> def ID ( typed_var_list_opt ) return_type_opt : NEWLINE INDENT func_body DEDENT
+
+typed_var_list_opt -> typed_var_list | epsilon
+typed_var_list -> typed_var_list , typed_var | typed_var
+
+return_type_opt -> -> type | epsilon
+
+func_body -> func_body_decls stmt_list_plus
+func_body_decls -> func_body_decls func_body_decl | epsilon
+func_body_decl -> global_decl | nonlocal_decl | var_def | func_def
+
+stmt_list_plus -> stmt_list_plus stmt | stmt
+
+typed_var -> ID : type
+type -> ID | IDSTRING | [ type ]
+
+global_decl -> global ID NEWLINE
+nonlocal_decl -> nonlocal ID NEWLINE
+var_def -> typed_var = literal NEWLINE
+
+stmt -> simple_stmt NEWLINE 
+      | if expr : block elif_list else_opt 
+      | while expr : block 
+      | for ID in expr : block
+
+elif_list -> elif_list elif expr : block | epsilon
+else_opt -> else : block | epsilon
+
+simple_stmt -> pass 
+             | expr 
+             | return expr_opt 
+             | target_list expr
+
+target_list -> target_list target = | target =
+
+expr_opt -> expr | epsilon
+
+block -> NEWLINE INDENT stmt_list_plus DEDENT
+
+literal -> None | True | False | INTEGER | IDSTRING | STRING
+
+expr -> cexpr 
+      | not expr 
+      | expr and expr 
+      | expr or expr 
+      | expr if expr else expr
+
+cexpr -> ID 
+       | literal 
+       | [ expr_list_opt ] 
+       | ( expr ) 
+       | member_expr 
+       | index_expr 
+       | member_expr ( expr_list_opt ) 
+       | ID ( expr_list_opt ) 
+       | cexpr bin_op cexpr 
+       | - cexpr
+
+expr_list_opt -> expr_list | epsilon
+expr_list -> expr_list , expr | expr
+
+bin_op -> + | - | * | // | % | == | != | <= | >= | < | > | is
+
+member_expr -> cexpr . ID
+index_expr -> cexpr [ expr ]
+
+target -> ID | member_expr | index_expr
