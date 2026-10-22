@@ -1,0 +1,96 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-noshorthands]{babel}
+\usepackage[margin=1.8cm]{geometry}
+\usepackage{booktabs,tabularx,enumitem}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{3pt}
+\pagestyle{empty}
+
+\begin{document}
+
+{\Large\textbf{Bitácora --- Generador de tablas LR(1)}}\\[2pt]
+CS342 Compiladores · UCSP · 2026-II\hfill
+Eduardo Cruz Laura · Alexander Carpio Mamani · Fernando Zegarra Maratuech
+
+\medskip
+\hrule
+\medskip
+
+\textbf{Registro de trabajo}
+
+\smallskip
+{\small
+\begin{tabularx}{\linewidth}{@{}l l X@{}}
+\toprule
+\textbf{Fecha} & \textbf{Integrante} & \textbf{Actividad}\\
+\midrule
+02/09 & Eduardo Cruz & Ajuste de \texttt{emit()} en el scanner para mostrar cada token en consola.\\
+29/09 & Eduardo Cruz & Estructura del proyecto \texttt{parser/}: lectura de la gramática desde archivo (alternativas con \texttt{|}, producción vacía \texttt{epsilon}), \texttt{first()} por punto fijo y \texttt{firstCadena($\beta$)}, con sus primeras pruebas.\\
+29/09 & Eduardo Cruz & CMake multiplataforma (macOS y Windows) y script de limpieza de builds.\\
+29/09 & Fernando Zegarra & Integración de la rama \texttt{prueba-edcr} en \texttt{main}.\\
+29/09 & Fernando Zegarra & \texttt{closure}, \texttt{goto}, \texttt{coleccionCanonica} y \texttt{llenarTablas}; reporte de conflictos y código de salida; \texttt{Makefile}; batería de 8 gramáticas con tabla esperada.\\
+\bottomrule
+\end{tabularx}
+}
+
+\medskip
+\textbf{Decisiones de diseño}
+\begin{itemize}[nosep,leftmargin=*]
+\item \textbf{Ítem como tres enteros} (producción, punto, anticipación) y cada
+      $cc_i$ como \texttt{std::set<Item>}: comparar dos conjuntos para saber si
+      un $cc$ ya existe es directo y el orden de los ítems es determinista.
+\item \textbf{Orden de las transiciones}: se precalcula el orden de primera
+      aparición de los símbolos en la gramática (sin el inicial). Fija la
+      numeración de los $cc_i$, que así coincide con la de otros equipos.
+\item \textbf{Aumentación solo si hace falta}: si el símbolo inicial tiene una
+      única producción y no aparece en ningún lado derecho (\texttt{Goal -> List}),
+      esa regla hace de aumentada; si no, se agrega \texttt{S' -> S}.
+\item \textbf{Conflictos}: cada celda de Action guarda sus acciones
+      (\texttt{s3}, \texttt{r2}, \texttt{acc}) con los ítems que las generan.
+      Si hay dos acciones distintas la herramienta no elige: reporta estado,
+      terminal e ítems y sale con código 1.
+\item \textbf{Código simple}: acciones como texto en vez de estructuras, una
+      sola función para imprimir y comparar las tablas, y lista fija de casos
+      de prueba (sin \texttt{<filesystem>}).
+\item \texttt{first()} y \texttt{firstCadena()} se reutilizan sin cambios:
+      \texttt{closure} calcula FIRST$(\delta a)$ llamando a \texttt{firstCadena}.
+\end{itemize}
+
+\medskip
+\textbf{Problemas encontrados y cómo se resolvieron}
+\begin{itemize}[nosep,leftmargin=*]
+\item La carga original \emph{siempre} agregaba \texttt{S' -> S}. Con la
+      gramática del enunciado eso creaba \texttt{Goal' -> Goal}: salían 13
+      estados, la numeración se corría una posición y la tabla de referencia no
+      coincidía. Se cambió a aumentación condicional (ver arriba).
+\item \texttt{goto} es palabra reservada de C++: el método se llama
+      \texttt{computeGoto}.
+\item La producción vacía se guarda como \texttt{\{"epsilon"\}}: se añadió
+      \texttt{body()}, que la devuelve vacía, para que su ítem sea directamente
+      $[A \to \bullet,\, a]$ (completo).
+\item El runner de pruebas recibía un único archivo; ahora recibe la carpeta
+      de casos y compara cada gramática con su \texttt{.tabla}.
+\end{itemize}
+
+\medskip
+\textbf{Verificación}
+\begin{itemize}[nosep,leftmargin=*]
+\item Caso de referencia (paréntesis): 12 conjuntos y la tabla exacta del enunciado.
+\item Batería: \texttt{firstCadena} y 8 gramáticas con su tabla esperada, todas
+      correctas. Incluye shift/reduce (\texttt{E -> E + E | id}), reduce/reduce
+      (\texttt{A -> a}, \texttt{B -> a}) y producciones vacías.
+\item Las tablas esperadas se generaron con una \emph{implementación
+      independiente} en Python y la prueba falla si se altera una sola celda.
+\end{itemize}
+
+\medskip
+\textbf{Pendiente}
+\begin{itemize}[nosep,leftmargin=*]
+\item Probar \texttt{make} y \texttt{make test} con g++: en la máquina de
+      desarrollo solo había MSVC, con el que se compiló y probó todo en
+      \texttt{/W4} sin avisos.
+\end{itemize}
+
+\end{document}

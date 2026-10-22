@@ -1,0 +1,13 @@
+estado	eof	(	)	List	Pair
+0		s3		1	2
+1	acc	s3			4
+2	r2	r2			
+3		s6	s7		5
+4	r1	r1			
+5			s8		
+6		s6	s10		9
+7	r4	r4			
+8	r3	r3			
+9			s11		
+10			r4		
+11			r3		

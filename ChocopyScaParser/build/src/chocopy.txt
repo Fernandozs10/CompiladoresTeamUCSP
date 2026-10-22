@@ -1,0 +1,65 @@
+program' -> program
+program -> def_list stmt_list
+
+def_list -> def_list def | epsilon
+def -> var_def | func_def | class_def
+
+stmt_list -> stmt_list stmt | epsilon
+stmt_list_plus -> stmt_list_plus stmt | stmt
+
+class_def -> CLASS ID LPAREN ID RPAREN COLON NEWLINE INDENT class_body DEDENT
+class_body -> PASS NEWLINE | class_body_defs
+class_body_defs -> class_body_defs class_body_def | class_body_def
+class_body_def -> var_def | func_def
+
+func_def -> DEF ID LPAREN typed_var_list_opt RPAREN return_type_opt COLON NEWLINE INDENT func_body DEDENT
+typed_var_list_opt -> typed_var_list | epsilon
+typed_var_list -> typed_var_list COMMA typed_var | typed_var
+return_type_opt -> ARROW type | epsilon
+
+func_body -> func_body_decls stmt_list_plus
+func_body_decls -> func_body_decls func_body_decl | epsilon
+func_body_decl -> global_decl | nonlocal_decl | var_def | func_def
+
+typed_var -> TYPED_ID COLON type
+type -> ID | IDSTRING | LBRACKET type RBRACKET
+
+global_decl -> GLOBAL ID NEWLINE
+nonlocal_decl -> NONLOCAL ID NEWLINE
+var_def -> typed_var ASSIGN literal NEWLINE
+
+stmt -> simple_stmt NEWLINE
+stmt -> IF expr COLON block elif_list else_opt
+stmt -> WHILE expr COLON block
+stmt -> FOR ID IN expr COLON block
+
+elif_list -> elif_list ELIF expr COLON block | epsilon
+else_opt -> ELSE COLON block | epsilon
+simple_stmt -> PASS
+simple_stmt -> expr
+simple_stmt -> RETURN expr_opt
+simple_stmt -> assignment_stmt
+assignment_stmt -> postfix ASSIGN assignment_tail
+assignment_tail -> postfix ASSIGN assignment_tail | expr
+expr_opt -> expr | epsilon
+block -> NEWLINE INDENT stmt_list_plus DEDENT
+
+literal -> NONE | TRUE | FALSE | INTEGER | IDSTRING | STRING
+expr -> conditional_expr
+conditional_expr -> or_expr | or_expr IF expr ELSE conditional_expr
+or_expr -> or_expr OR and_expr | and_expr
+and_expr -> and_expr AND not_expr | not_expr
+not_expr -> NOT not_expr | comparison
+comparison -> arith_expr comparison_tail
+comparison_tail -> comparison_op arith_expr comparison_tail | epsilon
+comparison_op -> EQ | NE | LT | GT | LE | GE | IS
+arith_expr -> arith_expr PLUS term | arith_expr MINUS term | term
+term -> term MULT unary | term INTDIV unary | term MOD unary | unary
+unary -> MINUS unary | postfix
+postfix -> primary postfix_tail
+postfix_tail -> DOT ID postfix_tail | LBRACKET expr RBRACKET postfix_tail
+postfix_tail -> LPAREN expr_list_opt RPAREN postfix_tail | epsilon
+primary -> ID | literal | LBRACKET expr_list_opt RBRACKET | LPAREN expr RPAREN
+
+expr_list_opt -> expr_list | epsilon
+expr_list -> expr_list COMMA expr | expr
