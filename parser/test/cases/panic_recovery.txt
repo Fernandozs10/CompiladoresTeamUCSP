@@ -1,0 +1,5 @@
+P -> L
+L -> L ; S | S
+S -> id = E | while ( E ) S
+E -> E + T | T
+T -> id | num

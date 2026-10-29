@@ -1,0 +1,12 @@
+G -> E
+E -> T E'
+E' -> + T E'
+E' -> - T E'
+E' -> epsilon
+T -> F T'
+T' -> * F T'
+T' -> / F T'
+T' -> epsilon
+F -> id
+F -> num
+F -> ( E )

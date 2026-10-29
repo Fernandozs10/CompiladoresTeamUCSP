@@ -1,0 +1,8 @@
+1:1	ID	x
+1:2	COLON
+1:4	ID	int
+1:8	ASSIGN
+1:10	INTEGER	2147483647
+1:20	NEWLINE
+2:1	EOF
+ERROR	1:10	literal entero fuera de rango (maximo 2147483647): 2147483648

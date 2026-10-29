@@ -1,0 +1,8 @@
+1:1	ID	x
+1:2	COLON
+1:4	ID	int
+1:8	ASSIGN
+1:10	INTEGER	7
+1:13	NEWLINE
+2:1	EOF
+ERROR	1:10	literal entero con cero a la izquierda: 007
