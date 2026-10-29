@@ -115,6 +115,31 @@ espacios, no el código fuente ni los lexemas de los identificadores. `$` se
 agrega automáticamente. Sin `--parse` ni `--source`, el ejecutable conserva su modo
 habitual de generar e imprimir las tablas.
 
+## Caché de las tablas
+
+Construir la colección canónica LR(1) de la gramática de ChocoPy es lo más
+costoso de cada ejecución, y para una misma gramática el resultado siempre es
+el mismo. Por eso, cuando no hay conflictos, las tablas se guardan en
+`<gramática>.lr1cache` (por ejemplo `src/chocopy.txt.lr1cache`) y las
+ejecuciones siguientes las cargan en lugar de recalcularlas:
+
+```sh
+./build/chocopy-parser src/chocopy.txt --source test/casesChocopy/12_clase.py            # calcula y guarda
+./build/chocopy-parser src/chocopy.txt --source test/casesChocopy/12_clase.py            # carga la caché
+./build/chocopy-parser src/chocopy.txt --source test/casesChocopy/12_clase.py --no-cache # calcula siempre
+```
+
+- La caché solo se usa si coincide el **hash de la gramática** (que se mezcla
+  con la fecha de compilación del generador, así que recompilar la invalida) y
+  el formato. Si el archivo falta, está truncado o dañado, o es de otra
+  gramática, se ignora y las tablas se calculan de nuevo.
+- Las tablas con conflictos **no** se guardan.
+- La salida estándar es idéntica con y sin caché; los avisos de la caché van a
+  la salida de error (y no se muestran con `--errors`).
+- Si se cambia el formato en `saveTablesCache`/`loadTablesCache`, hay que subir
+  `CACHE_VERSION` en `parser.cpp`.
+- Los archivos `*.lr1cache` están en el `.gitignore`.
+
 ## Formato de la gramática
 
 Una producción por línea, con `->` (o `::=`) y alternativas con `|`:

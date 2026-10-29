@@ -2,6 +2,7 @@
 #include "panic_recovery.h"
 
 #include <algorithm>
+#include <cstdint>
 #include <optional>
 #include <stdexcept>
 
@@ -25,11 +26,20 @@ bool Parser::loadGrammar(const std::string& filename) {
     non_terminals.clear();
     user_start_symbol.clear();
     augmented_start.clear();
+    grammar_hash.clear();
 
     std::string line;
     bool is_first_rule = true;
 
+    // FNV-1a de la gramática. Se mezcla con la fecha de compilación de este archivo:
+    // si el código del generador cambia y se recompila, las cachés viejas dejan de valer.
+    std::uint64_t hash = 1469598103934665603ULL;
+    for (unsigned char ch : std::string(__DATE__ " " __TIME__)) { hash ^= ch; hash *= 1099511628211ULL; }
+
     while (std::getline(file, line)) {
+        for (unsigned char ch : line) { hash ^= ch; hash *= 1099511628211ULL; }
+        hash ^= '\n'; hash *= 1099511628211ULL;
+
         if (line.empty()) continue;
 
         std::stringstream ss(line);
@@ -64,6 +74,10 @@ bool Parser::loadGrammar(const std::string& filename) {
     }
 
     file.close();
+
+    std::ostringstream hash_text;
+    hash_text << std::hex << hash;
+    grammar_hash = hash_text.str();
 
     if (grammar.empty() || user_start_symbol.empty()) {
         std::cerr << "Error: El archivo " << filename
@@ -110,7 +124,7 @@ std::set<std::string> Parser::computeFirstOfString(const std::vector<std::string
     bool all_nullable = true;
 
     for (const std::string& symbol : beta) {
-        std::set<std::string> sym_first = first_sets[symbol];
+        const std::set<std::string>& sym_first = first_sets[symbol];
 
         for (const auto& s : sym_first) {
             if (s != "epsilon") {
@@ -221,15 +235,22 @@ ItemSet Parser::computeClosure(ItemSet s) {
             std::vector<std::string> b = body(item.prod);
             if (item.dot >= (int)b.size() || isTerminal(b[item.dot])) continue;
 
-            std::vector<std::string> delta_a(b.begin() + item.dot + 1, b.end());
-            delta_a.push_back(lookaheads[item.lookahead]);
-            std::set<std::string> first = computeFirstOfString(delta_a);
+            // FIRST(delta a) solo depende de (producción, punto, anticipación): se guarda
+            const auto key = std::make_tuple(item.prod, item.dot, item.lookahead);
+            auto cached = closure_first_cache.find(key);
+            if (cached == closure_first_cache.end()) {
+                std::vector<std::string> delta_a(b.begin() + item.dot + 1, b.end());
+                delta_a.push_back(lookaheads[item.lookahead]);
+                std::vector<int> indexes;
+                for (const std::string& t : computeFirstOfString(delta_a)) {
+                    if (t != "epsilon") indexes.push_back(lookahead_index.at(t));
+                }
+                cached = closure_first_cache.emplace(key, indexes).first;
+            }
 
             for (size_t q = 0; q < grammar.size(); ++q) {
                 if (grammar[q].left != b[item.dot]) continue;
-                for (const std::string& t : first) {
-                    if (t == "epsilon") continue;
-                    int la = (int)(std::find(lookaheads.begin(), lookaheads.end(), t) - lookaheads.begin());
+                for (int la : cached->second) {
                     if (s.insert({ (int)q, 0, la }).second) changed = true;
                 }
             }
@@ -267,8 +288,14 @@ void Parser::buildCanonicalCollection() {
         if (isTerminal(x)) lookaheads.push_back(x);
     }
 
+    lookahead_index.clear();
+    for (size_t i = 0; i < lookaheads.size(); ++i) lookahead_index[lookaheads[i]] = (int)i;
+    closure_first_cache.clear();
+
     collection = { computeClosure({ { 0, 0, 0 } }) };   // Anticipación 0 = eof
     transitions.clear();
+
+    std::map<ItemSet, int> state_index = { { collection[0], 0 } };   // búsqueda rápida de cc existentes
 
     for (size_t i = 0; i < collection.size(); ++i) {
         for (const auto& x : symbols) {
@@ -276,9 +303,15 @@ void Parser::buildCanonicalCollection() {
             if (next.empty()) continue;
 
             // Si el conjunto ya existe se reutiliza; si no, es un cc nuevo
-            auto found = std::find(collection.begin(), collection.end(), next);
-            int j = (int)(found - collection.begin());
-            if (found == collection.end()) collection.push_back(next);
+            auto found = state_index.find(next);
+            int j;
+            if (found == state_index.end()) {
+                j = (int)collection.size();
+                state_index[next] = j;
+                collection.push_back(next);
+            } else {
+                j = found->second;
+            }
             transitions[{ (int)i, x }] = j;
         }
     }
@@ -641,4 +674,163 @@ void Parser::printConflicts() {
             }
         }
     }
+}
+
+// ===========================================================================
+//  Caché de las tablas
+//  Archivo de texto: encabezado (versión, hash de la gramática, nº de
+//  producciones), símbolos, anticipaciones, cc, transiciones, Action y Goto,
+//  y la marca final END. Si algo no coincide o falta, se calcula de nuevo.
+// ===========================================================================
+
+static const int CACHE_VERSION = 1;   // Subirla si cambia el algoritmo o el formato
+static const size_t CACHE_MAX_COUNT = 50000000;
+
+bool Parser::saveTablesCache(const std::string& filename) {
+    if (collection.empty() || grammar_hash.empty()) return false;
+    for (const auto& cell : action) {
+        if (cell.second.size() > 1) return false;   // Nunca se guardan tablas con conflictos
+    }
+
+    std::ofstream out(filename);
+    if (!out) return false;
+
+    const auto writeItem = [&out](const Item& item) {
+        out << ' ' << item.prod << ' ' << item.dot << ' ' << item.lookahead;
+    };
+
+    out << "LR1CACHE " << CACHE_VERSION << ' ' << grammar_hash << ' ' << grammar.size() << '\n';
+    out << "SYMBOLS " << symbols.size();
+    for (const auto& x : symbols) out << ' ' << x;
+    out << "\nLOOKAHEADS " << lookaheads.size();
+    for (const auto& x : lookaheads) out << ' ' << x;
+    out << "\nSTATES " << collection.size() << '\n';
+    for (const ItemSet& cc : collection) {
+        out << cc.size();
+        for (const Item& item : cc) writeItem(item);
+        out << '\n';
+    }
+    out << "TRANSITIONS " << transitions.size() << '\n';
+    for (const auto& t : transitions) {
+        out << t.first.first << ' ' << t.first.second << ' ' << t.second << '\n';
+    }
+    out << "ACTION " << action.size() << '\n';
+    for (const auto& cell : action) {
+        out << cell.first.first << ' ' << cell.first.second << ' ' << cell.second.size();
+        for (const auto& entry : cell.second) {
+            out << ' ' << entry.first << ' ' << entry.second.size();
+            for (const Item& item : entry.second) writeItem(item);
+        }
+        out << '\n';
+    }
+    out << "GOTO " << goto_table.size() << '\n';
+    for (const auto& g : goto_table) {
+        out << g.first.first << ' ' << g.first.second << ' ' << g.second << '\n';
+    }
+    out << "END\n";
+    out.flush();
+    return static_cast<bool>(out);
+}
+
+bool Parser::loadTablesCache(const std::string& filename) {
+    std::ifstream in(filename);
+    if (!in || grammar_hash.empty()) return false;
+
+    std::string word, hash;
+    int version = 0;
+    size_t productions = 0;
+    if (!(in >> word >> version >> hash >> productions)) return false;
+    if (word != "LR1CACHE" || version != CACHE_VERSION ||
+        hash != grammar_hash || productions != grammar.size()) return false;
+
+    // Todo se lee en variables locales y solo al final se copia al objeto
+    std::vector<std::string> new_symbols, new_lookaheads;
+    std::vector<ItemSet> new_collection;
+    std::map<std::pair<int, std::string>, int> new_transitions, new_goto;
+    std::map<std::pair<int, std::string>, std::map<std::string, std::vector<Item>>> new_action;
+    size_t count = 0;
+
+    const auto readList = [&](const char* name, std::vector<std::string>& list) {
+        if (!(in >> word >> count) || word != name || count > CACHE_MAX_COUNT) return false;
+        for (size_t i = 0; i < count; ++i) {
+            std::string x;
+            if (!(in >> x)) return false;
+            list.push_back(x);
+        }
+        return true;
+    };
+    const auto readItem = [&](Item& item) {
+        if (!(in >> item.prod >> item.dot >> item.lookahead)) return false;
+        if (item.prod < 0 || item.prod >= (int)productions) return false;
+        if (item.dot < 0 || item.dot > (int)body(item.prod).size()) return false;
+        return item.lookahead >= 0 && item.lookahead < (int)new_lookaheads.size();
+    };
+
+    if (!readList("SYMBOLS", new_symbols) || !readList("LOOKAHEADS", new_lookaheads)) return false;
+    if (new_lookaheads.empty() || new_lookaheads[0] != "$") return false;
+    const std::set<std::string> symbol_set(new_symbols.begin(), new_symbols.end());
+    const std::set<std::string> lookahead_set(new_lookaheads.begin(), new_lookaheads.end());
+
+    size_t states = 0;
+    if (!(in >> word >> states) || word != "STATES" || states == 0 || states > CACHE_MAX_COUNT) return false;
+    for (size_t i = 0; i < states; ++i) {
+        ItemSet cc;
+        if (!(in >> count) || count > CACHE_MAX_COUNT) return false;
+        for (size_t k = 0; k < count; ++k) {
+            Item item;
+            if (!readItem(item)) return false;
+            cc.insert(item);
+        }
+        new_collection.push_back(cc);
+    }
+
+    const auto stateOk = [states](int s) { return s >= 0 && s < (int)states; };
+
+    if (!(in >> word >> count) || word != "TRANSITIONS" || count > CACHE_MAX_COUNT) return false;
+    for (size_t i = 0; i < count; ++i) {
+        int from, to;
+        std::string x;
+        if (!(in >> from >> x >> to) || !stateOk(from) || !stateOk(to) || !symbol_set.count(x)) return false;
+        new_transitions[{ from, x }] = to;
+    }
+
+    if (!(in >> word >> count) || word != "ACTION" || count > CACHE_MAX_COUNT) return false;
+    for (size_t i = 0; i < count; ++i) {
+        int state;
+        std::string terminal;
+        size_t actions;
+        if (!(in >> state >> terminal >> actions) || !stateOk(state) ||
+            !lookahead_set.count(terminal) || actions != 1) return false;   // sin conflictos: una acción por celda
+        std::string name;
+        size_t items;
+        if (!(in >> name >> items) || name.empty() || items > CACHE_MAX_COUNT) return false;
+        std::vector<Item> list;
+        for (size_t k = 0; k < items; ++k) {
+            Item item;
+            if (!readItem(item)) return false;
+            list.push_back(item);
+        }
+        new_action[{ state, terminal }][name] = list;
+    }
+
+    if (!(in >> word >> count) || word != "GOTO" || count > CACHE_MAX_COUNT) return false;
+    for (size_t i = 0; i < count; ++i) {
+        int from, to;
+        std::string x;
+        if (!(in >> from >> x >> to) || !stateOk(from) || !stateOk(to) || !symbol_set.count(x)) return false;
+        new_goto[{ from, x }] = to;
+    }
+
+    if (!(in >> word) || word != "END") return false;
+
+    symbols = new_symbols;
+    lookaheads = new_lookaheads;
+    lookahead_index.clear();
+    for (size_t i = 0; i < lookaheads.size(); ++i) lookahead_index[lookaheads[i]] = (int)i;
+    closure_first_cache.clear();
+    collection = new_collection;
+    transitions = new_transitions;
+    action = new_action;
+    goto_table = new_goto;
+    return true;
 }

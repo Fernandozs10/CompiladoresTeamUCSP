@@ -71,6 +71,12 @@ private:
     std::map<std::pair<int, std::string>, std::map<std::string, std::vector<Item>>> action;
     std::map<std::pair<int, std::string>, int> goto_table;
 
+    // Aceleración de closure: índice de cada terminal y FIRST(delta a) ya calculados
+    std::map<std::string, int> lookahead_index;
+    std::map<std::tuple<int, int, int>, std::vector<int>> closure_first_cache;
+
+    std::string grammar_hash;   // Hash del archivo de gramática, para validar la caché
+
     bool isTerminal(const std::string& symbol);
     std::vector<std::string> body(int prod);   
     std::string itemText(const Item& item);
@@ -92,6 +98,13 @@ public:
     void buildCanonicalCollection();
 
     int fillTables();
+
+    // Caché de las tablas: se guardan solo si no hay conflictos y se reutilizan
+    // únicamente si la gramática (su hash) es la misma. Devuelven false si no
+    // se pudo guardar/cargar; en ese caso se debe calcular de nuevo.
+    bool saveTablesCache(const std::string& filename);
+    bool loadTablesCache(const std::string& filename);
+
     ParseResult parseWithPanicRecovery(
         const std::vector<std::string>& tokens,
         const std::set<std::string>& panic_nonterminals,

@@ -49,7 +49,7 @@ static void printTrace(const ParseResult& result) {
               << result.discarded_tokens << " token(s) descartado(s)).\n";
 }
 
-// Uso: chocopy-parser [archivo_gramatica] [--source archivo.py | --parse "ID ASSIGN INTEGER"] [--panic stmt,expr] [--details | --errors]
+// Uso: chocopy-parser [archivo_gramatica] [--source archivo.py | --parse "ID ASSIGN INTEGER"] [--panic stmt,expr] [--details | --errors] [--no-cache]
 int main(int argc, char* argv[]) {
     Parser parser;
     std::string filename = "src/chocopy.txt";
@@ -61,6 +61,7 @@ int main(int argc, char* argv[]) {
     bool should_parse_tokens = false;
     bool show_details_option = false;
     bool errors_only = false;
+    bool use_cache = true;
 
     const auto hasOptionValue = [&](const std::string& option, int index) {
         if (index + 1 >= argc || std::string(argv[index + 1]).rfind("--", 0) == 0) {
@@ -93,6 +94,8 @@ int main(int argc, char* argv[]) {
             show_details_option = true;
         } else if (argument == "--errors") {
             errors_only = true;
+        } else if (argument == "--no-cache") {
+            use_cache = false;
         } else if (argument.rfind("--", 0) == 0) {
             std::cerr << "Opción desconocida o incompleta: " << argument << '\n';
             return 2;
@@ -119,10 +122,19 @@ int main(int argc, char* argv[]) {
     if (show_parser_details) parser.printGrammar();
     parser.computeFirstSets();
     if (show_parser_details) parser.printFirstSets();
-    parser.buildCanonicalCollection();
+
+    // Las tablas se reutilizan de <gramática>.lr1cache si la gramática no cambió.
+    // Los avisos van a stderr para no alterar la salida estándar.
+    const std::string cache_file = filename + ".lr1cache";
+    const bool from_cache = use_cache && parser.loadTablesCache(cache_file);
+    if (from_cache) {
+        if (!errors_only) std::cerr << "Tablas cargadas desde la caché: " << cache_file << std::endl;
+    } else {
+        parser.buildCanonicalCollection();
+    }
     if (show_parser_details) parser.printCanonicalCollection();
 
-    const int conflicts = parser.fillTables();
+    const int conflicts = from_cache ? 0 : parser.fillTables();
     if (show_parser_details) {
         std::cout << "--- Tablas Action y Goto ---\n" << parser.tablesText() << std::endl;
     }
@@ -130,6 +142,9 @@ int main(int argc, char* argv[]) {
     if (conflicts > 0) {
         if (!errors_only) parser.printConflicts();
         return 1;
+    }
+    if (use_cache && !from_cache && parser.saveTablesCache(cache_file) && !errors_only) {
+        std::cerr << "Tablas guardadas en la caché: " << cache_file << std::endl;
     }
 
     if (!should_parse) return 0;
