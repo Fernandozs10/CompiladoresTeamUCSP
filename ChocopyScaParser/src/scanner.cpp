@@ -85,8 +85,8 @@ std::vector<std::pair<int, CodeStr>> physicalLines(const CodeStr& src) {
     return lines;
 }
 
-Scanner::Scanner(CodeStr source, bool strict)
-    : source_(std::move(source)), strict_(strict), indents_{0} {}
+Scanner::Scanner(CodeStr source, bool strict, bool quiet)
+    : source_(std::move(source)), strict_(strict), quiet_(quiet), indents_{0} {}
 
 // -- utilidades internas ----------------------------------------------
 
@@ -97,10 +97,12 @@ void Scanner::error(const std::string& msg, int line, int col) {
 }
 
 void Scanner::emit(Token t, const CodeStr& lexeme) {
-    std::cout << "DEBUG SCAN - " << t.type
-              << " [ " << utf8Encode(lexeme) << " ]"
-              << " (" << t.line << ":" << t.col << ")"
-              << std::endl;
+    if (!quiet_) {
+        std::cout << "DEBUG SCAN - " << t.type
+                  << " [ " << utf8Encode(lexeme) << " ]"
+                  << " (" << t.line << ":" << t.col << ")"
+                  << std::endl;
+    }
 
     tokens_.push_back(std::move(t));
 }
@@ -108,7 +110,7 @@ void Scanner::emit(Token t, const CodeStr& lexeme) {
 // -- API publica -------------------------------------------------------
 
 const std::vector<Token>& Scanner::tokenize() {
-    std::cout << "INFO SCAN - Start scanning..." << "\n";
+    if (!quiet_) std::cout << "INFO SCAN - Start scanning..." << "\n";
     int lastLineno = 0;
 
     for (const auto& entry : physicalLines(source_)) {
@@ -121,15 +123,23 @@ const std::vector<Token>& Scanner::tokenize() {
         size_t i = 0;
         int indent = 0;
         while (i < n && (text[i] == U' ' || text[i] == U'\t')) {
-            indent += (text[i] == U' ') ? 1 : (8 - (indent % 8));
+            indent += (text[i] == U' ') ? 1 : (4 - (indent % 4));
             i += 1;
         }
 
         // Linea en blanco o solo comentario (Reference 3.1.3-3.1.4).
         if (i >= n || text[i] == U'#') continue;
 
+        // VALIDACIÓN DE REGLA DE 4 ESPACIOS
+        if (indent % 4 != 0) {
+            std::string lineContent = utf8Encode(text);
+            std::string msg = "la indentacion debe ser multiplo de 4 espacios en linea " + 
+                            std::to_string(lineno) + ": \"" + lineContent + "\"";
+            
+            error(msg, lineno, 1);
+        }
         // Es una linea logica (Reference 3.1.2).
-        handleIndent(indent, lineno);
+        handleIndent(indent, lineno,text);
         scanLine(lineno, text, i);
         emit(Token::plain("NEWLINE", lineno, static_cast<int>(n) + 1),U"\\n");
     }
@@ -146,8 +156,7 @@ const std::vector<Token>& Scanner::tokenize() {
 
 // -- estructura de lineas ---------------------------------------------
 
-void Scanner::handleIndent(int indent, int lineno) {
-    const int top = indents_.back();
+void Scanner::handleIndent(int indent, int lineno, const CodeStr& text) {    const int top = indents_.back();
     if (indent == top) return;
     if (indent > top) {
         indents_.push_back(indent);
@@ -159,8 +168,10 @@ void Scanner::handleIndent(int indent, int lineno) {
         emit(Token::plain("DEDENT", lineno, 1), U"<dedent>");
     }
     if (indents_.back() != indent) {
-        error("nivel de indentacion inconsistente", lineno, 1);
-        indents_.push_back(indent);  // recuperacion
+        std::string lineContent = utf8Encode(text);
+        std::string msg = "nivel de indentacion inconsistente en linea " + std::to_string(lineno) + ": \"" + lineContent + "\"";
+        error(msg, lineno, 1);
+        indents_.push_back(indent);  // recuperación
     }
 }
 
@@ -204,7 +215,7 @@ void Scanner::scanLine(int lineno, const CodeStr& text, size_t i) {
 
 size_t Scanner::scanOperator(int lineno, const CodeStr& text, size_t i) {
     const int col = static_cast<int>(i) + 1;
-
+    std::string lineContent = utf8Encode(text); // Obtenemos la línea completa
     const CodeStr two = text.substr(i, 2);
     const auto it2 = op2().find(two);
     if (two.size() == 2 && it2 != op2().end()) {
@@ -219,14 +230,17 @@ size_t Scanner::scanOperator(int lineno, const CodeStr& text, size_t i) {
         return i + 1;
     }
     if (one == U'/') {
-        error("operador '/' no soportado en ChocoPy (usa '//')", lineno, col);
+        error("operador '/' no soportado en ChocoPy (usa '//') en linea " + 
+              std::to_string(lineno) + ": \"" + lineContent + "\"", lineno, col);
         return i + 1;
     }
     if (one == U'!') {
-        error("'!' inesperado (se esperaba '!=')", lineno, col);
+        error("'!' inesperado (se esperaba '!=') en linea " + 
+              std::to_string(lineno) + ": \"" + lineContent + "\"", lineno, col);
         return i + 1;
     }
-    error("caracter ilegal " + pyRepr(CodeStr(1, one)), lineno, col);
+    error("caracter ilegal " + pyRepr(CodeStr(1, one)) + " en linea " + 
+          std::to_string(lineno) + ": \"" + lineContent + "\"", lineno, col);
     return i + 1;
 }
 
@@ -238,7 +252,7 @@ size_t Scanner::scanNumber(int lineno, const CodeStr& text, size_t i) {
     const CodeStr lexemeCp = text.substr(i, j - i);
     const std::string lexeme = utf8Encode(lexemeCp);
     const int col = static_cast<int>(i) + 1;
-
+    std::string lineContent = utf8Encode(text); // Obtenemos la línea completa
     // Maximal munch: se toma la corrida completa de digitos y luego
     // se valida (Reference 3.4.2). El test de longitud va primero para
     // no convertir cadenas de digitos gigantescas.
@@ -250,11 +264,11 @@ size_t Scanner::scanNumber(int lineno, const CodeStr& text, size_t i) {
     }
 
     if (lexeme.size() > 1 && lexeme[0] == '0') {
-        error("literal entero con cero a la izquierda: " + lexeme, lineno, col);
+        error("literal entero con cero a la izquierda: " + lexeme + " en linea " + 
+              std::to_string(lineno) + ": \"" + lineContent + "\"", lineno, col);
     } else if (!inRange) {
-        error("literal entero fuera de rango (maximo " +
-                  std::to_string(INT_MAX_CHOCOPY) + "): " + lexeme,
-              lineno, col);
+        error("literal entero fuera de rango (maximo " + std::to_string(INT_MAX_CHOCOPY) + 
+              "): " + lexeme + " en linea " + std::to_string(lineno) + ": \"" + lineContent + "\"", lineno, col);
     }
 
     // Valor de recuperacion: el entero si es representable, si no INT_MAX.
@@ -269,7 +283,7 @@ size_t Scanner::scanString(int lineno, const CodeStr& text, size_t i) {
     size_t j = i + 1;
     CodeStr out;
     bool hadError = false;
-
+    std::string lineContent = utf8Encode(text); // Obtenemos la línea completa
     while (j < n) {
         const char32_t ch = text[j];
         if (ch == U'"') {
@@ -287,9 +301,8 @@ size_t Scanner::scanString(int lineno, const CodeStr& text, size_t i) {
                 if (it != escapes().end()) {
                     out += it->second;
                 } else {
-                    error("secuencia de escape ilegal '\\" +
-                              utf8Encode(esc) + "'",
-                          lineno, static_cast<int>(j) + 1);
+                    error("secuencia de escape ilegal '\\" + utf8Encode(esc) + "' en linea " + 
+                          std::to_string(lineno) + ": \"" + lineContent + "\"", lineno, static_cast<int>(j) + 1);
                     hadError = true;
                     out += esc;
                 }
@@ -300,9 +313,8 @@ size_t Scanner::scanString(int lineno, const CodeStr& text, size_t i) {
         }
         const unsigned long o = static_cast<unsigned long>(ch);
         if (o < 32 || o > 126) {
-            error("caracter fuera del rango ASCII 32-126 en string (codigo " +
-                      std::to_string(o) + ")",
-                  lineno, static_cast<int>(j) + 1);
+            error("caracter fuera del rango ASCII 32-126 en string (codigo " + std::to_string(o) + 
+                  ") en linea " + std::to_string(lineno) + ": \"" + lineContent + "\"", lineno, static_cast<int>(j) + 1);
             hadError = true;
             j += 1;
             continue;
@@ -311,7 +323,6 @@ size_t Scanner::scanString(int lineno, const CodeStr& text, size_t i) {
         j += 1;
     }
 
-    error("string literal sin terminar", lineno, col);
-    emit(Token::text("STRING", out, lineno, col), text.substr(i, n - i));
+error("string literal sin terminar en linea " + std::to_string(lineno) + ": \"" + lineContent + "\"", lineno, col);    emit(Token::text("STRING", out, lineno, col), text.substr(i, n - i));
     return n;
 }

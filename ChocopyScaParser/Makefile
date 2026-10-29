@@ -24,6 +24,7 @@ build/run_tests: test/run_tests.cpp src/parser.cpp src/parser.h src/panic_recove
 test: all
 	./build/run_tests test/cases
 	! ./build/chocopy-parser test/cases/conflicto_rr.txt > /dev/null
+	! ./build/chocopy-parser --source --details test/casesChocopy/01_hola.py > /dev/null 2>&1
 	./build/chocopy-parser src/chocopy.txt --source test/casesChocopy/02_asignacion.py > /dev/null
 	./build/chocopy-parser src/chocopy.txt --source test/casesChocopy/12_clase.py > /dev/null
 

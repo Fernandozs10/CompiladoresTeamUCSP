@@ -8,9 +8,13 @@
 #include <iterator>
 #include <sstream>
 
-static const std::set<std::string> DEFAULT_PANIC_NONTERMINALS = {
-    "stmt", "expr", "block"
-};
+static const std::set<std::string> DEFAULT_PANIC_NONTERMINALS = {"stmt", "expr", "block"};
+
+static void printErrors(const ParseResult& result) {
+    for (const std::string& diagnostic : result.diagnostics) {
+        std::cout << "ERROR PARSE - " << diagnostic << '\n';
+    }
+}
 
 static void printTrace(const ParseResult& result) {
     std::size_t states_width = std::string("Estados").size();
@@ -45,7 +49,7 @@ static void printTrace(const ParseResult& result) {
               << result.discarded_tokens << " token(s) descartado(s)).\n";
 }
 
-// Uso: chocopy-parser [archivo_gramatica] [--source archivo.py | --parse "ID ASSIGN INTEGER"] [--panic stmt,expr]
+// Uso: chocopy-parser [archivo_gramatica] [--source archivo.py | --parse "ID ASSIGN INTEGER"] [--panic stmt,expr] [--details | --errors]
 int main(int argc, char* argv[]) {
     Parser parser;
     std::string filename = "src/chocopy.txt";
@@ -55,23 +59,40 @@ int main(int argc, char* argv[]) {
     bool should_parse = false;
     bool should_scan_source = false;
     bool should_parse_tokens = false;
+    bool show_details_option = false;
+    bool errors_only = false;
+
+    const auto hasOptionValue = [&](const std::string& option, int index) {
+        if (index + 1 >= argc || std::string(argv[index + 1]).rfind("--", 0) == 0) {
+            std::cerr << "La opción " << option << " requiere un argumento.\n";
+            return false;
+        }
+        return true;
+    };
 
     for (int i = 1; i < argc; ++i) {
         const std::string argument = argv[i];
-        if (argument == "--parse" && i + 1 < argc) {
+        if (argument == "--parse") {
+            if (!hasOptionValue(argument, i)) return 2;
             parse_input = argv[++i];
             should_parse = true;
             should_parse_tokens = true;
-        } else if (argument == "--source" && i + 1 < argc) {
+        } else if (argument == "--source") {
+            if (!hasOptionValue(argument, i)) return 2;
             source_filename = argv[++i];
             should_parse = true;
             should_scan_source = true;
-        } else if (argument == "--panic" && i + 1 < argc) {
+        } else if (argument == "--panic") {
+            if (!hasOptionValue(argument, i)) return 2;
             std::stringstream symbols(argv[++i]);
             std::string symbol;
             while (std::getline(symbols, symbol, ',')) {
                 if (!symbol.empty()) panic_nonterminals.insert(symbol);
             }
+        } else if (argument == "--details") {
+            show_details_option = true;
+        } else if (argument == "--errors") {
+            errors_only = true;
         } else if (argument.rfind("--", 0) == 0) {
             std::cerr << "Opción desconocida o incompleta: " << argument << '\n';
             return 2;
@@ -85,24 +106,29 @@ int main(int argc, char* argv[]) {
         return 2;
     }
 
-    std::cout << "Cargando gramática desde: " << filename << " ...\n" << std::endl;
+    const bool show_parser_details = !errors_only && (!should_parse || show_details_option);
+    if (show_parser_details) {
+        std::cout << "Cargando gramática desde: " << filename << " ...\n" << std::endl;
+    }
 
     if (!parser.loadGrammar(filename)) {
         std::cerr << "Error al abrir el archivo de gramática." << std::endl;
         return 2;
     }
 
-    parser.printGrammar();
+    if (show_parser_details) parser.printGrammar();
     parser.computeFirstSets();
-    parser.printFirstSets();
+    if (show_parser_details) parser.printFirstSets();
     parser.buildCanonicalCollection();
-    parser.printCanonicalCollection();
+    if (show_parser_details) parser.printCanonicalCollection();
 
     const int conflicts = parser.fillTables();
-    std::cout << "--- Tablas Action y Goto ---\n" << parser.tablesText() << std::endl;
+    if (show_parser_details) {
+        std::cout << "--- Tablas Action y Goto ---\n" << parser.tablesText() << std::endl;
+    }
 
     if (conflicts > 0) {
-        parser.printConflicts();
+        if (!errors_only) parser.printConflicts();
         return 1;
     }
 
@@ -111,7 +137,9 @@ int main(int argc, char* argv[]) {
     std::vector<std::string> tokens;
     std::size_t lexical_errors = 0;
     if (should_scan_source) {
-        std::cout << "Escaneando archivo fuente: " << source_filename << '\n';
+        if (!errors_only) {
+            std::cout << "Escaneando archivo fuente: " << source_filename << '\n';
+        }
         std::ifstream source_file(source_filename, std::ios::binary);
         if (!source_file) {
             std::cerr << "Error al abrir el archivo fuente: " << source_filename << '\n';
@@ -121,7 +149,7 @@ int main(int argc, char* argv[]) {
         const std::string source_bytes(
             (std::istreambuf_iterator<char>(source_file)),
             std::istreambuf_iterator<char>());
-        Scanner scanner(utf8Decode(source_bytes));
+        Scanner scanner(utf8Decode(source_bytes), false, errors_only);
         const std::vector<Token>& scanned_tokens = scanner.tokenize();
         for (std::size_t i = 0; i < scanned_tokens.size(); ++i) {
             const Token& scanned_token = scanned_tokens[i];
@@ -155,7 +183,8 @@ int main(int argc, char* argv[]) {
 
     try {
         const ParseResult result = parser.parseWithPanicRecovery(tokens, panic_nonterminals);
-        printTrace(result);
+        if (errors_only) printErrors(result);
+        else printTrace(result);
         return lexical_errors > 0 || result.aborted || result.syntax_errors > 0 ? 1 : 0;
     } catch (const std::exception& error) {
         std::cerr << "Error al analizar: " << error.what() << '\n';

@@ -38,6 +38,22 @@ make
 ./build/chocopy-parser --source test/casesChocopy/12_clase.py --panic stmt,expr,block
 ```
 
+Por defecto, al analizar se muestra la salida del scanner y la traza, sin las
+tablas ni la colección de estados. Agrega `--details` para volver a mostrar la
+gramática, los conjuntos FIRST, los estados `cc` y las tablas junto con la
+traza:
+
+```sh
+./build/chocopy-parser --source test/casesChocopy/01_hola.py --details
+```
+
+Para mostrar solamente los errores léxicos y sintácticos, usa `--errors`. En
+este modo se omiten la salida del scanner, la gramática y las tablas LR(1):
+
+```sh
+./build/chocopy-parser --source test/casesChocopy/archivo_con_errores.py --errors
+```
+
 La gramática usa las categorías del scanner (`ID`, `INTEGER`, `PLUS`,
 `NEWLINE`, etc.) como terminales. El ejecutable distingue los identificadores
 de declaraciones tipadas como `TYPED_ID` en posiciones de declaración para
@@ -82,21 +98,22 @@ recuperables del lenguaje, por ejemplo sentencias y expresiones.
 
 Para mostrar en la terminal la traza de estados, símbolos, entrada restante y
 acciones, ejecuta el programa con `--parse` y define los anclajes con `--panic`
-(separados por comas):
+(separados por comas). Agrega `--details` si también quieres imprimir las tablas
+y los estados del parser:
 
 ```sh
 cd ChocoPyScaParser
 make
 ./build/chocopy-parser test/cases/panic_recovery.txt \
   --parse "id = id + + id ; id = num" \
-  --panic S,E,T
+  --panic S,E,T --details
 ```
 
 La traza incluye las acciones normales, las celdas `Action` vacías y las
 operaciones de recuperación. `--parse` recibe nombres de tokens separados por
 espacios, no el código fuente ni los lexemas de los identificadores. `$` se
-agrega automáticamente. Sin `--parse`, el ejecutable conserva su modo habitual
-de generar e imprimir las tablas.
+agrega automáticamente. Sin `--parse` ni `--source`, el ejecutable conserva su modo
+habitual de generar e imprimir las tablas.
 
 ## Formato de la gramática
 

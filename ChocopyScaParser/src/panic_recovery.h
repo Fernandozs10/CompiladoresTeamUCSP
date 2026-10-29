@@ -23,9 +23,7 @@ public:
     using FollowSets = std::map<std::string, std::set<std::string>>;
     using GotoLookup = std::function<std::optional<int>(int, const std::string&)>;
 
-    static PanicRecoveryOutcome recover(
-        std::vector<int>& state_stack,
-        const std::vector<std::string>& tokens,
+    static PanicRecoveryOutcome recover(std::vector<int>& state_stack,const std::vector<std::string>& tokens,
         std::size_t& input_position,
         const std::set<std::string>& panic_nonterminals,
         const FollowSets& follow_sets,
@@ -54,28 +52,20 @@ public:
 
         const auto follow = follow_sets.find(anchor);
         if (follow == follow_sets.end()) {
-            return { false, anchor, 0, popped_states, *target_state,
-                     "no se encontró FOLLOW(" + anchor + ")" };
+            return { false, anchor, 0, popped_states, *target_state,"no se encontró FOLLOW(" + anchor + ")" };
         }
 
         std::size_t discarded = 0;
-        while (input_position < tokens.size() &&
-               follow->second.count(tokens[input_position]) == 0) {
+        while (input_position < tokens.size() &&follow->second.count(tokens[input_position]) == 0) {
             if (tokens[input_position] == "$") {
-                return { false, anchor, discarded,
-                         popped_states,
-                         *target_state,
-                         "se alcanzó el fin de entrada antes de FOLLOW(" + anchor + ")" };
+                return { false, anchor, discarded,popped_states,*target_state,"se alcanzó el fin de entrada antes de FOLLOW(" + anchor + ")" };
             }
             ++input_position;
             ++discarded;
         }
 
         if (input_position == tokens.size()) {
-            return { false, anchor, discarded,
-                     popped_states,
-                     *target_state,
-                     "se alcanzó el fin de entrada antes de FOLLOW(" + anchor + ")" };
+            return { false, anchor, discarded,popped_states,*target_state,"se alcanzó el fin de entrada antes de FOLLOW(" + anchor + ")" };
         }
 
         return { true, anchor, discarded, popped_states, *target_state, {} };

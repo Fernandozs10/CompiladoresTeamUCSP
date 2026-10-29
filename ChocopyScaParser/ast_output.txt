@@ -1,0 +1,28 @@
+Escaneando archivo fuente: test/casesChocopy/01_hola.py
+INFO SCAN - Start scanning...
+ERROR SCAN - caracter ilegal '@' (1:1)
+DEBUG SCAN - NEWLINE [ \n ] (1:2)
+DEBUG SCAN - INDENT [ <indent> ] (2:1)
+DEBUG SCAN - ID [ print ] (2:3)
+DEBUG SCAN - LPAREN [ ( ] (2:8)
+DEBUG SCAN - STRING [ "Hello World" ] (2:9)
+DEBUG SCAN - NEWLINE [ \n ] (2:22)
+DEBUG SCAN - DEDENT [ <dedent> ] (3:1)
+DEBUG SCAN - ID [ print ] (3:1)
+DEBUG SCAN - STRING [ "Hello World" ] (3:6)
+DEBUG SCAN - RPAREN [ ) ] (3:19)
+DEBUG SCAN - NEWLINE [ \n ] (3:20)
+DEBUG SCAN - EOF [ <eof> ] (4:1)
+
+Entrada: NEWLINE INDENT ID LPAREN STRING NEWLINE DEDENT ID STRING RPAREN NEWLINE $
+
+--- Traza del análisis y recuperación ---
+Estados  Símbolos  Entrada                                                                    Acción
+-----------------------------------------------------------------------------------------------------
+0        $          NEWLINE INDENT ID LPAREN STRING NEWLINE DEDENT ID STRING RPAREN NEWLINE $  error: Action[0, NEWLINE] vacía
+                    NEWLINE INDENT ID LPAREN STRING NEWLINE DEDENT ID STRING RPAREN NEWLINE $  error-follow 1: desapila 1 estado(s); busca Goto para N
+                    NEWLINE INDENT ID LPAREN STRING NEWLINE DEDENT ID STRING RPAREN NEWLINE $  fin de entrada o sin anclaje; aborta
+
+Error sintáctico en el token 'NEWLINE' (posición 0).
+Se abortó la recuperación: la pila de estados quedó vacía.
+Análisis abortado (1 error(es), 0 token(s) descartado(s)).

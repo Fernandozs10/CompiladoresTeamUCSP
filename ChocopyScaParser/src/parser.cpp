@@ -23,6 +23,8 @@ bool Parser::loadGrammar(const std::string& filename) {
     grammar.clear();
     terminals.clear();
     non_terminals.clear();
+    user_start_symbol.clear();
+    augmented_start.clear();
 
     std::string line;
     bool is_first_rule = true;
@@ -62,6 +64,12 @@ bool Parser::loadGrammar(const std::string& filename) {
     }
 
     file.close();
+
+    if (grammar.empty() || user_start_symbol.empty()) {
+        std::cerr << "Error: El archivo " << filename
+                  << " no contiene producciones válidas.\n";
+        return false;
+    }
 
     int start_productions = 0;
     bool start_in_rhs = false;
@@ -406,8 +414,7 @@ ParseResult Parser::parseWithPanicRecovery(
         }
         return text;
     };
-    const auto record_trace = [&](std::size_t position, const std::string& action_text,
-                                  const std::string& kind) {
+    const auto record_trace = [&](std::size_t position, const std::string& action_text,const std::string& kind) {
         result.trace.push_back({
             state_text(),
             join(symbol_stack, 0),
@@ -423,15 +430,10 @@ ParseResult Parser::parseWithPanicRecovery(
         const auto cell = action.find({ state, lookahead });
 
         if (cell == action.end() || cell->second.empty()) {
-            record_trace(input_position,
-                         "error: Action[" + std::to_string(state) + ", " + lookahead +
-                             "] vacía",
-                         "error");
+            record_trace(input_position,"error: Action[" + std::to_string(state) + ", " + lookahead +"] vacía","error");
             ++result.syntax_errors;
             const std::size_t error_position = input_position;
-            result.diagnostics.push_back(
-                "Error sintáctico en el token '" + lookahead + "' (posición " +
-                std::to_string(error_position) + ").");
+            result.diagnostics.push_back("Error sintáctico en el token '" + lookahead + "' (posición " + std::to_string(error_position) + ").");
 
             if (previous_error_position && *previous_error_position == error_position) {
                 if (lookahead == "$") {
@@ -442,12 +444,8 @@ ParseResult Parser::parseWithPanicRecovery(
                 }
                 ++input_position;
                 ++result.discarded_tokens;
-                record_trace(input_position,
-                             "sin avance: se descarta " + lookahead,
-                             "recovery");
-                result.diagnostics.push_back(
-                    "Sin avance desde el error anterior; se descartó el token '" +
-                    lookahead + "'.");
+                record_trace(input_position,"sin avance: se descarta " + lookahead,"recovery");
+                result.diagnostics.push_back("Sin avance desde el error anterior; se descartó el token '" +lookahead + "'.");
             }
             previous_error_position = error_position;
 
@@ -469,11 +467,8 @@ ParseResult Parser::parseWithPanicRecovery(
                 const std::size_t symbols_to_pop =
                     std::min(recovery.popped_states, symbol_stack.size());
                 symbol_stack.resize(symbol_stack.size() - symbols_to_pop);
-                record_trace(error_position,
-                             "1: desapila " + std::to_string(recovery.popped_states) +
-                                 " estado(s); busca Goto para " +
-                                 (recovery.non_terminal.empty() ? "N" : recovery.non_terminal),
-                             "recovery");
+                record_trace(error_position,"error-follow 1: desapila " + std::to_string(recovery.popped_states) +
+                " estado(s); busca Goto para " +(recovery.non_terminal.empty() ? "N" : recovery.non_terminal),"recovery");
             }
 
             if (!recovery.non_terminal.empty()) {
@@ -482,17 +477,12 @@ ParseResult Parser::parseWithPanicRecovery(
                     if (!skipped_tokens.empty()) skipped_tokens += " ";
                     skipped_tokens += input[i];
                 }
-                record_trace(input_position,
-                             "2: consume " +
-                                 (skipped_tokens.empty() ? "nada" : skipped_tokens) +
-                                 " hasta FOLLOW(" + recovery.non_terminal + ")",
-                             "recovery");
+                record_trace(input_position,"error-follow 2: consume " +(skipped_tokens.empty() ? "nada" : skipped_tokens) +
+                " hasta FOLLOW(" + recovery.non_terminal + ")","recovery");
             }
 
             if (!recovery.recovered) {
-                record_trace(input_position,
-                             "fin de entrada o sin anclaje; aborta",
-                             "error");
+                record_trace(input_position,"fin de entrada o sin anclaje; aborta","error");
                 result.aborted = true;
                 result.diagnostics.push_back(
                     "Se abortó la recuperación: " + recovery.failure + ".");
@@ -500,10 +490,8 @@ ParseResult Parser::parseWithPanicRecovery(
             }
             state_stack.push_back(recovery.target_state);
             symbol_stack.push_back(recovery.non_terminal);
-            record_trace(input_position,
-                         "3 y 4: apila " + recovery.non_terminal + " y Goto = " +
-                             std::to_string(state_stack.back()),
-                         "recovery");
+            record_trace(input_position,"error-follow 3 y 4: apila " + recovery.non_terminal + 
+                " y Goto = " +std::to_string(state_stack.back()),"recovery");
             result.diagnostics.push_back(
                 "Recuperación mediante " + recovery.non_terminal + "; se descartaron " +
                 std::to_string(recovery.discarded_tokens) + " token(s).");
@@ -522,9 +510,7 @@ ParseResult Parser::parseWithPanicRecovery(
 
         if (selected_action[0] == 's') {
             const int next_state = std::stoi(selected_action.substr(1));
-            record_trace(input_position,
-                         "desplaza " + lookahead + " a " + std::to_string(next_state),
-                         "normal");
+            record_trace(input_position,"shift " + lookahead + " a " + std::to_string(next_state),"normal");
             state_stack.push_back(next_state);
             symbol_stack.push_back(lookahead);
             ++input_position;
@@ -539,9 +525,7 @@ ParseResult Parser::parseWithPanicRecovery(
             const std::vector<std::string> rhs = body(production_index);
             std::string production_text = grammar[production_index].left + " ->";
             for (const std::string& symbol : rhs) production_text += " " + symbol;
-            record_trace(input_position,
-                         "reduce " + std::to_string(production_index) + ": " + production_text,
-                         "normal");
+            record_trace(input_position,"reduce " + std::to_string(production_index) + ": " + production_text,"normal");
             if (rhs.size() >= state_stack.size()) {
                 throw std::logic_error("La reducción vaciaría la pila de estados LR.");
             }

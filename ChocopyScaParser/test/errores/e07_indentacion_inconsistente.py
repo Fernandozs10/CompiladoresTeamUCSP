@@ -1,3 +1,3 @@
 if True:
-        x: int = 1
-    y: int = 2
+    x: int = 1
+  y: int = 2
