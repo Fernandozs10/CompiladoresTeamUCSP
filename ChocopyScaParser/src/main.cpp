@@ -8,11 +8,11 @@
 #include <iterator>
 #include <sstream>
 
-static const std::set<std::string> DEFAULT_PANIC_NONTERMINALS = {"stmt", "expr", "block"};
+static const std::set<std::string> DEFAULT_PANIC_NONTERMINALS = {"stmt", "simple_stmt", "block","def","class_body_def"};//expresion se saco para probar otros 
 
 static void printErrors(const ParseResult& result) {
     for (const std::string& diagnostic : result.diagnostics) {
-        std::cout << "ERROR PARSE - " << diagnostic << '\n';
+        std::cout << "ERROR - " << diagnostic << '\n';
     }
 }
 
@@ -135,6 +135,7 @@ int main(int argc, char* argv[]) {
     if (!should_parse) return 0;
 
     std::vector<std::string> tokens;
+    std::vector<ParseTokenLocation> token_locations;
     std::size_t lexical_errors = 0;
     if (should_scan_source) {
         if (!errors_only) {
@@ -149,7 +150,12 @@ int main(int argc, char* argv[]) {
         const std::string source_bytes(
             (std::istreambuf_iterator<char>(source_file)),
             std::istreambuf_iterator<char>());
-        Scanner scanner(utf8Decode(source_bytes), false, errors_only);
+        const CodeStr decoded_source = utf8Decode(source_bytes);
+        std::vector<std::string> source_lines;
+        for (const auto& line : physicalLines(decoded_source)) {
+            source_lines.push_back(utf8Encode(line.second));
+        }
+        Scanner scanner(decoded_source, false, errors_only);
         const std::vector<Token>& scanned_tokens = scanner.tokenize();
         for (std::size_t i = 0; i < scanned_tokens.size(); ++i) {
             const Token& scanned_token = scanned_tokens[i];
@@ -165,6 +171,19 @@ int main(int argc, char* argv[]) {
                 scanned_token.type == "ID" && i + 1 < scanned_tokens.size() &&
                 scanned_tokens[i + 1].type == "COLON" && declaration_position;
             tokens.push_back(typed_identifier ? "TYPED_ID" : scanned_token.type);
+            std::string source_line;
+            if (scanned_token.line > 0 &&
+                static_cast<std::size_t>(scanned_token.line) <= source_lines.size()) {
+                source_line = source_lines[static_cast<std::size_t>(scanned_token.line) - 1];
+            }
+            token_locations.push_back(ParseTokenLocation{
+                scanned_token.line, scanned_token.col, source_line});
+        }
+        if (!scanned_tokens.empty() && scanned_tokens.back().type == "EOF") {
+            const Token& eof = scanned_tokens.back();
+            std::string source_line;
+            if (!source_lines.empty()) source_line = source_lines.back();
+            token_locations.push_back(ParseTokenLocation{eof.line, eof.col, source_line});
         }
         lexical_errors = scanner.errors().size();
         if (panic_nonterminals.empty()) {
@@ -182,7 +201,8 @@ int main(int argc, char* argv[]) {
     }
 
     try {
-        const ParseResult result = parser.parseWithPanicRecovery(tokens, panic_nonterminals);
+        const ParseResult result = parser.parseWithPanicRecovery(
+            tokens, panic_nonterminals, token_locations);
         if (errors_only) printErrors(result);
         else printTrace(result);
         return lexical_errors > 0 || result.aborted || result.syntax_errors > 0 ? 1 : 0;

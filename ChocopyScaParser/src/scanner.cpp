@@ -93,7 +93,20 @@ Scanner::Scanner(CodeStr source, bool strict, bool quiet)
 void Scanner::error(const std::string& msg, int line, int col) {
     if (strict_) throw LexError(msg, line, col);
     errors_.push_back(LexErrorInfo{msg, line, col});
-    std::cout << "ERROR SCAN - " << msg << " (" << line << ":" << col << ")" << std::endl;
+    
+    std::cout << "Error léxico: " << msg << ". Línea " << line << ", columna " << col << std::endl;
+    
+    for (const auto& entry : physicalLines(source_)) {
+        if (entry.first == line) { 
+            std::cout << utf8Encode(entry.second) << std::endl;
+            
+            for (int i = 1; i < col; ++i) {
+                std::cout << " ";
+            }
+            std::cout << "^" << std::endl;
+            break;
+        }
+    }
 }
 
 void Scanner::emit(Token t, const CodeStr& lexeme) {

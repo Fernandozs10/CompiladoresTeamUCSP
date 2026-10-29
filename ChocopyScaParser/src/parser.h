@@ -37,6 +37,12 @@ struct ParseTraceStep {
     std::string kind;
 };
 
+struct ParseTokenLocation {
+    int line = 0;
+    int column = 0;
+    std::string source_line;
+};
+
 struct ParseResult {
     bool accepted = false;
     bool aborted = false;
@@ -88,7 +94,8 @@ public:
     int fillTables();
     ParseResult parseWithPanicRecovery(
         const std::vector<std::string>& tokens,
-        const std::set<std::string>& panic_nonterminals);
+        const std::set<std::string>& panic_nonterminals,
+        const std::vector<ParseTokenLocation>& locations = {});
 
     void printGrammar();
     void printFirstSets();

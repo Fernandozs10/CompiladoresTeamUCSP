@@ -360,7 +360,8 @@ std::map<std::string, std::set<std::string>> Parser::computeFollowSets() {
 
 ParseResult Parser::parseWithPanicRecovery(
     const std::vector<std::string>& tokens,
-    const std::set<std::string>& panic_nonterminals) {
+    const std::set<std::string>& panic_nonterminals,
+    const std::vector<ParseTokenLocation>& locations) {
     if (grammar.empty() || collection.empty() || action.empty()) {
         throw std::logic_error(
             "Primero cargue la gramática y construya la colección y las tablas LR.");
@@ -398,6 +399,11 @@ ParseResult Parser::parseWithPanicRecovery(
     std::size_t input_position = 0;
     std::optional<std::size_t> previous_error_position;
 
+    const auto token_location = [&locations](std::size_t position) -> ParseTokenLocation {
+        if (position < locations.size()) return locations[position];
+        return ParseTokenLocation{};
+    };
+
     const auto join = [](const std::vector<std::string>& values, std::size_t start) {
         std::string text;
         for (std::size_t i = start; i < values.size(); ++i) {
@@ -433,7 +439,20 @@ ParseResult Parser::parseWithPanicRecovery(
             record_trace(input_position,"error: Action[" + std::to_string(state) + ", " + lookahead +"] vacía","error");
             ++result.syntax_errors;
             const std::size_t error_position = input_position;
-            result.diagnostics.push_back("Error sintáctico en el token '" + lookahead + "' (posición " + std::to_string(error_position) + ").");
+            std::string diagnostic = "Error sintáctico en el token '" + lookahead +
+                                     "' (posición " + std::to_string(error_position) + ").";
+            const ParseTokenLocation location = token_location(error_position);
+            if (location.line > 0) {
+                diagnostic += " Línea " + std::to_string(location.line);
+                if (location.column > 0) diagnostic += ", columna " + std::to_string(location.column);
+                if (!location.source_line.empty()) {
+                    diagnostic += "\n    " + location.source_line;
+                    if (location.column > 0) {
+                        diagnostic += "\n    " + std::string(location.column - 1, ' ') + '^';
+                    }
+                }
+            }
+            result.diagnostics.push_back(diagnostic);
 
             if (previous_error_position && *previous_error_position == error_position) {
                 if (lookahead == "$") {
