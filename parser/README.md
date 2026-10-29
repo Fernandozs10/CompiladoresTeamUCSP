@@ -83,6 +83,31 @@ de otros equipos.
 **Códigos de salida:** `0` sin conflictos, `1` si hay conflictos, `2` si no se
 pudo leer la gramática.
 
+## Caché de las tablas
+
+Calcular la colección canónica es lo más costoso de una ejecución, y para una
+misma gramática el resultado siempre es el mismo. Por eso, cuando no hay
+conflictos, la herramienta guarda las tablas en `<gramática>.lr1cache` y las
+reutiliza en las ejecuciones siguientes:
+
+```sh
+./build/chocopy-parser src/compiladores.txt              # calcula y guarda
+./build/chocopy-parser src/compiladores.txt              # carga la caché
+./build/chocopy-parser src/compiladores.txt --no-cache   # calcula siempre
+```
+
+- La caché solo se usa si coincide el **hash de la gramática** (se mezcla con la
+  fecha de compilación del generador, así que recompilar la invalida) y el
+  formato; si el archivo falta, está truncado, dañado o es de otra gramática,
+  se ignora y las tablas se calculan de nuevo.
+- Las tablas con conflictos **no** se guardan: siempre se recalculan y se
+  reportan.
+- La salida estándar es idéntica con y sin caché; los avisos sobre la caché van
+  a la salida de error.
+- Si se cambia el formato del archivo en `saveTablesCache`/`loadTablesCache`,
+  hay que subir `CACHE_VERSION` en `parser.cpp`.
+- Los archivos `*.lr1cache` están en el `.gitignore`.
+
 ## Caso de referencia
 
 Para la gramática de paréntesis la herramienta produce los 12 conjuntos y

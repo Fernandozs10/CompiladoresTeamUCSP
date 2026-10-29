@@ -23,3 +23,5 @@ ScannerChocoPY/
 # Builds locales del parser (CMake)
 /parser/build/
 /parser/build-*/
+# Cachés de tablas LR(1) del generador
+*.lr1cache
