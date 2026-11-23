@@ -31,14 +31,19 @@ bool Parser::loadGrammar(const std::string& filename) {
     std::string line;
     bool is_first_rule = true;
 
+    // Cambios agregados para la tabla cache -- start
     // FNV-1a de la gramática. Se mezcla con la fecha de compilación de este archivo:
     // si el código del generador cambia y se recompila, las cachés viejas dejan de valer.
-    std::uint64_t hash = 1469598103934665603ULL;
+    std::uint64_t hash = 1469598103934665603ULL;    
+    // Cambios agregados para la tabla cache -- end
+
     for (unsigned char ch : std::string(__DATE__ " " __TIME__)) { hash ^= ch; hash *= 1099511628211ULL; }
 
+    // Cambios agregados para la tabla cache -- start
     while (std::getline(file, line)) {
         for (unsigned char ch : line) { hash ^= ch; hash *= 1099511628211ULL; }
         hash ^= '\n'; hash *= 1099511628211ULL;
+        // Cambios agregados para la tabla cache -- end
 
         if (line.empty()) continue;
 
@@ -75,9 +80,11 @@ bool Parser::loadGrammar(const std::string& filename) {
 
     file.close();
 
+    // Cambios agregados para la tabla cache -- start
     std::ostringstream hash_text;
     hash_text << std::hex << hash;
     grammar_hash = hash_text.str();
+    // Cambios agregados para la tabla cache -- end
 
     if (grammar.empty() || user_start_symbol.empty()) {
         std::cerr << "Error: El archivo " << filename
@@ -235,6 +242,8 @@ ItemSet Parser::computeClosure(ItemSet s) {
             std::vector<std::string> b = body(item.prod);
             if (item.dot >= (int)b.size() || isTerminal(b[item.dot])) continue;
 
+
+            // Cambios para la tabla cache -- start
             // FIRST(delta a) solo depende de (producción, punto, anticipación): se guarda
             const auto key = std::make_tuple(item.prod, item.dot, item.lookahead);
             auto cached = closure_first_cache.find(key);
@@ -254,6 +263,7 @@ ItemSet Parser::computeClosure(ItemSet s) {
                     if (s.insert({ (int)q, 0, la }).second) changed = true;
                 }
             }
+            // Cambios para la tabla cache -- end
         }
     }
     return s;
@@ -295,6 +305,7 @@ void Parser::buildCanonicalCollection() {
     collection = { computeClosure({ { 0, 0, 0 } }) };   // Anticipación 0 = eof
     transitions.clear();
 
+    // Cambios agregados para la tabla cache -- start
     std::map<ItemSet, int> state_index = { { collection[0], 0 } };   // búsqueda rápida de cc existentes
 
     for (size_t i = 0; i < collection.size(); ++i) {
@@ -315,6 +326,7 @@ void Parser::buildCanonicalCollection() {
             transitions[{ (int)i, x }] = j;
         }
     }
+    // Cambios agregados para la tabla cache -- end
 }
 
 int Parser::fillTables() {
@@ -429,6 +441,7 @@ ParseResult Parser::parseWithPanicRecovery(
     ParseResult result;
     std::vector<int> state_stack{ 0 };
     std::vector<std::string> symbol_stack{ "$" };
+    std::vector<NodePtr> value_stack{ nullptr };   // el nodo del AST de cada símbolo de symbol_stack
     std::size_t input_position = 0;
     std::optional<std::size_t> previous_error_position;
 
@@ -519,6 +532,7 @@ ParseResult Parser::parseWithPanicRecovery(
                 const std::size_t symbols_to_pop =
                     std::min(recovery.popped_states, symbol_stack.size());
                 symbol_stack.resize(symbol_stack.size() - symbols_to_pop);
+                value_stack.resize(symbol_stack.size());
                 record_trace(error_position,"error-follow 1: desapila " + std::to_string(recovery.popped_states) +
                 " estado(s); busca Goto para " +(recovery.non_terminal.empty() ? "N" : recovery.non_terminal),"recovery");
             }
@@ -542,6 +556,7 @@ ParseResult Parser::parseWithPanicRecovery(
             }
             state_stack.push_back(recovery.target_state);
             symbol_stack.push_back(recovery.non_terminal);
+            value_stack.push_back(nullptr);
             record_trace(input_position,"error-follow 3 y 4: apila " + recovery.non_terminal + 
                 " y Goto = " +std::to_string(state_stack.back()),"recovery");
             result.diagnostics.push_back(
@@ -554,6 +569,7 @@ ParseResult Parser::parseWithPanicRecovery(
         if (selected_action == "acc") {
             record_trace(input_position, "acepta", "normal");
             result.accepted = true;
+            result.ast = value_stack.back();
             break;
         }
         if (selected_action.empty()) {
@@ -565,6 +581,11 @@ ParseResult Parser::parseWithPanicRecovery(
             record_trace(input_position,"shift " + lookahead + " a " + std::to_string(next_state),"normal");
             state_stack.push_back(next_state);
             symbol_stack.push_back(lookahead);
+            const ParseTokenLocation shifted_token = token_location(input_position);
+            const std::string token_text = shifted_token.text.empty() ? lookahead : shifted_token.text;
+            value_stack.push_back(result.syntax_errors == 0
+                                      ? newTokenNode(lookahead, token_text, shifted_token.line)
+                                      : nullptr);
             ++input_position;
             continue;
         }
@@ -593,6 +614,14 @@ ParseResult Parser::parseWithPanicRecovery(
             }
             state_stack.push_back(transition->second);
             symbol_stack.push_back(grammar[production_index].left);
+
+            // AST: los nodos de los símbolos reducidos pasan a ser los hijos del nodo nuevo
+            const std::vector<NodePtr> children(value_stack.end() - static_cast<std::ptrdiff_t>(rhs.size()),
+                                                value_stack.end());
+            value_stack.resize(value_stack.size() - rhs.size());
+            value_stack.push_back(result.syntax_errors == 0
+                                      ? buildNode(grammar[production_index].left, rhs, children)
+                                      : nullptr);
             continue;
         }
 
@@ -686,6 +715,7 @@ void Parser::printConflicts() {
 static const int CACHE_VERSION = 1;   // Subirla si cambia el algoritmo o el formato
 static const size_t CACHE_MAX_COUNT = 50000000;
 
+// Cambios para la Tabla Cache -- start
 bool Parser::saveTablesCache(const std::string& filename) {
     if (collection.empty() || grammar_hash.empty()) return false;
     for (const auto& cell : action) {
@@ -731,7 +761,10 @@ bool Parser::saveTablesCache(const std::string& filename) {
     out.flush();
     return static_cast<bool>(out);
 }
+// Camvios para la Tabla Cache -- end
 
+
+// Cambios para la Tabla Cache -- start
 bool Parser::loadTablesCache(const std::string& filename) {
     std::ifstream in(filename);
     if (!in || grammar_hash.empty()) return false;
@@ -825,12 +858,17 @@ bool Parser::loadTablesCache(const std::string& filename) {
 
     symbols = new_symbols;
     lookaheads = new_lookaheads;
+
+    //Cambios para la Tabla Cache -- start
     lookahead_index.clear();
     for (size_t i = 0; i < lookaheads.size(); ++i) lookahead_index[lookaheads[i]] = (int)i;
     closure_first_cache.clear();
+    //Cambios para la Tabla Cache -- end
+    
     collection = new_collection;
     transitions = new_transitions;
     action = new_action;
     goto_table = new_goto;
     return true;
 }
+// Cambios para la Tabla Cache -- end

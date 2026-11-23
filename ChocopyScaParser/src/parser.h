@@ -12,6 +12,8 @@
 #include <cctype>
 #include <tuple>
 
+#include "ast.h"
+
 struct Production {
     std::string left;                  // no terminal
     std::vector<std::string> right;    // secuencia 
@@ -41,6 +43,7 @@ struct ParseTokenLocation {
     int line = 0;
     int column = 0;
     std::string source_line;
+    std::string text;   // lexema del token (nombre del ID, valor del número...)
 };
 
 struct ParseResult {
@@ -50,6 +53,7 @@ struct ParseResult {
     std::size_t discarded_tokens = 0;
     std::vector<std::string> diagnostics;
     std::vector<ParseTraceStep> trace;
+    NodePtr ast;   // raíz del AST; solo existe si el análisis terminó sin errores sintácticos
 };
 
 class Parser {
@@ -71,11 +75,12 @@ private:
     std::map<std::pair<int, std::string>, std::map<std::string, std::vector<Item>>> action;
     std::map<std::pair<int, std::string>, int> goto_table;
 
+    // Cambios agregados para la tabla cache -- start
     // Aceleración de closure: índice de cada terminal y FIRST(delta a) ya calculados
     std::map<std::string, int> lookahead_index;
     std::map<std::tuple<int, int, int>, std::vector<int>> closure_first_cache;
-
     std::string grammar_hash;   // Hash del archivo de gramática, para validar la caché
+    // Cambios agregados para la tabla cache -- end
 
     bool isTerminal(const std::string& symbol);
     std::vector<std::string> body(int prod);   
@@ -99,12 +104,14 @@ public:
 
     int fillTables();
 
+    // Cambios para la tabla cache -- start
     // Caché de las tablas: se guardan solo si no hay conflictos y se reutilizan
     // únicamente si la gramática (su hash) es la misma. Devuelven false si no
     // se pudo guardar/cargar; en ese caso se debe calcular de nuevo.
     bool saveTablesCache(const std::string& filename);
     bool loadTablesCache(const std::string& filename);
-
+    // Cambios para la tabla cache -- end
+    
     ParseResult parseWithPanicRecovery(
         const std::vector<std::string>& tokens,
         const std::set<std::string>& panic_nonterminals,

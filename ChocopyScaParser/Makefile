@@ -8,17 +8,17 @@ CXXFLAGS = -std=c++17 -O2 -Wall -Wextra
 
 all: build/chocopy-parser build/run_tests
 
-build/chocopy-parser: src/main.cpp src/parser.cpp src/parser.h src/panic_recovery.h src/scanner.cpp src/scanner.h src/tokens.cpp src/tokens.h build/src/chocopy.txt
+build/chocopy-parser: src/main.cpp src/parser.cpp src/parser.h src/panic_recovery.h src/scanner.cpp src/scanner.h src/tokens.cpp src/tokens.h src/ast.cpp src/ast.h src/semantic.cpp src/semantic.h src/symtab.h build/src/chocopy.txt
 	mkdir -p build
-	$(CXX) $(CXXFLAGS) -Isrc src/parser.cpp src/scanner.cpp src/tokens.cpp src/main.cpp -o $@
+	$(CXX) $(CXXFLAGS) -Isrc src/parser.cpp src/ast.cpp src/semantic.cpp src/scanner.cpp src/tokens.cpp src/main.cpp -o $@
 
 build/src/chocopy.txt: src/chocopy.txt
 	mkdir -p build/src
 	cp $< $@
 
-build/run_tests: test/run_tests.cpp src/parser.cpp src/parser.h src/panic_recovery.h
+build/run_tests: test/run_tests.cpp src/parser.cpp src/parser.h src/panic_recovery.h src/ast.cpp src/ast.h
 	mkdir -p build
-	$(CXX) $(CXXFLAGS) -Isrc src/parser.cpp test/run_tests.cpp -o $@
+	$(CXX) $(CXXFLAGS) -Isrc src/parser.cpp src/ast.cpp test/run_tests.cpp -o $@
 
 # Además comprueba que ante un conflicto la herramienta termina con error
 test: all
@@ -27,6 +27,9 @@ test: all
 	! ./build/chocopy-parser --source --details test/casesChocopy/01_hola.py > /dev/null 2>&1
 	./build/chocopy-parser src/chocopy.txt --source test/casesChocopy/02_asignacion.py > /dev/null
 	./build/chocopy-parser src/chocopy.txt --source test/casesChocopy/12_clase.py > /dev/null
+	./build/chocopy-parser src/chocopy.txt --check test/semantic/s01_correcto.py > /dev/null
+	! ./build/chocopy-parser src/chocopy.txt --check test/semantic/s02_errores.py > /dev/null
+	! ./build/chocopy-parser src/chocopy.txt --check test/semantic/s03_scopes.py > /dev/null
 
 run: build/chocopy-parser
 	./build/chocopy-parser src/compiladores.txt

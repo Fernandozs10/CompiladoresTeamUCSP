@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_library(parser_core src/parser.cpp src/panic_recovery.h)
+add_library(parser_core src/parser.cpp src/ast.cpp src/panic_recovery.h)
 target_include_directories(parser_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
 add_library(scanner_core src/scanner.cpp src/tokens.cpp)
@@ -19,7 +19,7 @@ else()
     target_compile_options(scanner_core PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
-add_executable(chocopy-parser src/main.cpp)
+add_executable(chocopy-parser src/main.cpp src/semantic.cpp)
 target_link_libraries(chocopy-parser PRIVATE parser_core scanner_core)
 configure_file(src/compiladores.txt compiladores.txt COPYONLY)
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/src")

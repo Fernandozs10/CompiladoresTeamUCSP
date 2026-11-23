@@ -1,5 +1,6 @@
 #include "parser.h"
 #include "scanner.h"
+#include "semantic.h"
 
 #include <algorithm>
 #include <fstream>
@@ -49,7 +50,7 @@ static void printTrace(const ParseResult& result) {
               << result.discarded_tokens << " token(s) descartado(s)).\n";
 }
 
-// Uso: chocopy-parser [archivo_gramatica] [--source archivo.py | --parse "ID ASSIGN INTEGER"] [--panic stmt,expr] [--details | --errors] [--no-cache]
+// Uso: chocopy-parser [archivo_gramatica] [--check archivo.py | --source archivo.py | --parse "ID ASSIGN INTEGER"] [--panic stmt,expr] [--details | --errors] [--no-cache]
 int main(int argc, char* argv[]) {
     Parser parser;
     std::string filename = "src/chocopy.txt";
@@ -62,6 +63,7 @@ int main(int argc, char* argv[]) {
     bool show_details_option = false;
     bool errors_only = false;
     bool use_cache = true;
+    bool check_mode = false;   // --check: scanner, parser, AST y chequeo semántico en una sola corrida
 
     const auto hasOptionValue = [&](const std::string& option, int index) {
         if (index + 1 >= argc || std::string(argv[index + 1]).rfind("--", 0) == 0) {
@@ -83,6 +85,12 @@ int main(int argc, char* argv[]) {
             source_filename = argv[++i];
             should_parse = true;
             should_scan_source = true;
+        } else if (argument == "--check") {
+            if (!hasOptionValue(argument, i)) return 2;
+            source_filename = argv[++i];
+            should_parse = true;
+            should_scan_source = true;
+            check_mode = true;
         } else if (argument == "--panic") {
             if (!hasOptionValue(argument, i)) return 2;
             std::stringstream symbols(argv[++i]);
@@ -123,6 +131,7 @@ int main(int argc, char* argv[]) {
     parser.computeFirstSets();
     if (show_parser_details) parser.printFirstSets();
 
+    // Cambios agregados para la generacion de la tabla cache -- start
     // Las tablas se reutilizan de <gramática>.lr1cache si la gramática no cambió.
     // Los avisos van a stderr para no alterar la salida estándar.
     const std::string cache_file = filename + ".lr1cache";
@@ -132,20 +141,29 @@ int main(int argc, char* argv[]) {
     } else {
         parser.buildCanonicalCollection();
     }
-    if (show_parser_details) parser.printCanonicalCollection();
+    // Cambios agregados para la generacion de la tabla cache -- end
 
+    if (show_parser_details) parser.printCanonicalCollection();
+ 
+    // Cambios agregados para la generacion de la tabla cache -- start
     const int conflicts = from_cache ? 0 : parser.fillTables();
+    // Cambios agregados para la generacion de la tabla cache -- end
+
     if (show_parser_details) {
         std::cout << "--- Tablas Action y Goto ---\n" << parser.tablesText() << std::endl;
     }
 
+    
     if (conflicts > 0) {
         if (!errors_only) parser.printConflicts();
         return 1;
     }
+
+    // Cambios agregados para la generacion de la tabla cache -- start
     if (use_cache && !from_cache && parser.saveTablesCache(cache_file) && !errors_only) {
         std::cerr << "Tablas guardadas en la caché: " << cache_file << std::endl;
     }
+    // Cambios agregados para la generacion de la tabla cache -- end
 
     if (!should_parse) return 0;
 
@@ -153,7 +171,7 @@ int main(int argc, char* argv[]) {
     std::vector<ParseTokenLocation> token_locations;
     std::size_t lexical_errors = 0;
     if (should_scan_source) {
-        if (!errors_only) {
+        if (!errors_only && !check_mode) {
             std::cout << "Escaneando archivo fuente: " << source_filename << '\n';
         }
         std::ifstream source_file(source_filename, std::ios::binary);
@@ -170,7 +188,7 @@ int main(int argc, char* argv[]) {
         for (const auto& line : physicalLines(decoded_source)) {
             source_lines.push_back(utf8Encode(line.second));
         }
-        Scanner scanner(decoded_source, false, errors_only);
+        Scanner scanner(decoded_source, false, errors_only || check_mode);
         const std::vector<Token>& scanned_tokens = scanner.tokenize();
         for (std::size_t i = 0; i < scanned_tokens.size(); ++i) {
             const Token& scanned_token = scanned_tokens[i];
@@ -191,8 +209,12 @@ int main(int argc, char* argv[]) {
                 static_cast<std::size_t>(scanned_token.line) <= source_lines.size()) {
                 source_line = source_lines[static_cast<std::size_t>(scanned_token.line) - 1];
             }
+            // Lexema que el AST necesita: el nombre del ID, el valor del número o del string
+            std::string lexeme = scanned_token.type;
+            if (scanned_token.kind == ValueKind::Int) lexeme = std::to_string(scanned_token.intValue);
+            else if (scanned_token.kind == ValueKind::Str) lexeme = utf8Encode(scanned_token.strValue);
             token_locations.push_back(ParseTokenLocation{
-                scanned_token.line, scanned_token.col, source_line});
+                scanned_token.line, scanned_token.col, source_line, lexeme});
         }
         if (!scanned_tokens.empty() && scanned_tokens.back().type == "EOF") {
             const Token& eof = scanned_tokens.back();
@@ -218,6 +240,20 @@ int main(int argc, char* argv[]) {
     try {
         const ParseResult result = parser.parseWithPanicRecovery(
             tokens, panic_nonterminals, token_locations);
+        if (check_mode) {
+            printErrors(result);
+            if (lexical_errors > 0 || result.aborted || result.syntax_errors > 0 || !result.ast) return 1;
+
+            SemanticChecker checker;
+            const std::vector<std::string> semantic_errors = checker.check(result.ast);
+            std::cout << "--- AST (con los tipos que halló el chequeo) ---\n";
+            printAst(result.ast, std::cout);
+            std::cout << "\n--- Chequeo semántico ---\n";
+            for (const std::string& message : semantic_errors) std::cout << message << '\n';
+            if (semantic_errors.empty()) std::cout << "Sin errores semánticos.\n";
+            else std::cout << semantic_errors.size() << " error(es) semántico(s).\n";
+            return semantic_errors.empty() ? 0 : 1;
+        }
         if (errors_only) printErrors(result);
         else printTrace(result);
         return lexical_errors > 0 || result.aborted || result.syntax_errors > 0 ? 1 : 0;
