@@ -9,23 +9,23 @@
 #include "ast.h"
 #include "symtab.h"
 
-// Recorre el AST, construye las tablas de símbolos y comprueba nombres y tipos.
-// No se detiene en el primer error: los junta todos.
+// recorre el AST, construye las tablas de simbolos y comprueba nombres y tipos.
+// no se detiene en el primer error: los junta todos.
 class SemanticChecker {
 public:
     SemanticChecker();
 
-    // Devuelve los errores encontrados, cada uno con su línea (vacío si el programa es correcto)
+    // devuelve los errores encontrados, cada uno con su linea (vacio si el programa es correcto)
     std::vector<std::string> checkProgram(const NodePtr& program);
 
 private:
-    // Tablas de símbolos
+    // tablas de simbolos
     Scope* createScope(const std::string& scopeName, Scope* parentScope);
     void declareClassNames(const NodePtr& program);
     void declareNamesInScope(const NodePtr& container);
     void declareGlobalAndNonlocalNames(const NodePtr& body);
 
-    // Recorrido
+    // recorrido
     void checkBodyContents(const NodePtr& container);
     void checkFunctionDefinition(const NodePtr& function);
     void checkStatement(const NodePtr& statement);
@@ -33,22 +33,22 @@ private:
     void checkBooleanCondition(const NodePtr& conditionNode, const std::string& statementName);
     std::string checkAssignmentTarget(const NodePtr& target);
 
-    // Expresiones: devuelven su tipo y lo guardan en node->type
+    // expresiones: devuelven su tipo y lo guardan en node->type
     std::string checkExpression(const NodePtr& node);
     std::string checkBinaryOperation(const NodePtr& node);
     std::string checkFunctionCall(const NodePtr& node);
 
-    // Tipos
+    // tipos
     bool isAssignable(const std::string& sourceType, const std::string& targetType);
     void checkTypeExists(const std::string& typeName, int line);
     Symbol* findClassMember(const std::string& className, const std::string& memberName);
 
     void reportError(int line, const std::string& message);
 
-    std::vector<std::unique_ptr<Scope>> ownedScopes;   // dueña de todas las tablas
+    std::vector<std::unique_ptr<Scope>> ownedScopes;   // duena de todas las tablas
     Scope* globalScope = nullptr;
     Scope* currentScope = nullptr;
-    std::string expectedReturnType;                    // tipo de retorno de la función que se revisa
+    std::string expectedReturnType;                    // tipo de retorno de la funcion que se revisa
     bool isInsideFunction = false;
     std::vector<std::string> collectedErrors;
 };

@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
     bool show_details_option = false;
     bool errors_only = false;
     bool use_cache = true;
-    bool check_mode = false;   // --check: scanner, parser, AST y chequeo semántico en una sola corrida
+    bool check_mode = false;   // --check: scanner, parser, AST y chequeo semantico en una sola corrida
 
     const auto hasOptionValue = [&](const std::string& option, int index) {
         if (index + 1 >= argc || std::string(argv[index + 1]).rfind("--", 0) == 0) {
@@ -246,12 +246,12 @@ int main(int argc, char* argv[]) {
 
             SemanticChecker checker;
             const std::vector<std::string> semantic_errors = checker.checkProgram(result.ast);
-            std::cout << "--- AST (con los tipos que halló el chequeo) ---\n";
+            std::cout << "--- ast (con los tipos que hallo el chequeo) ---\n";
             printAst(result.ast, std::cout);
-            std::cout << "\n--- Chequeo semántico ---\n";
+            std::cout << "\n--- chequeo semantico ---\n";
             for (const std::string& message : semantic_errors) std::cout << message << '\n';
-            if (semantic_errors.empty()) std::cout << "Sin errores semánticos.\n";
-            else std::cout << semantic_errors.size() << " error(es) semántico(s).\n";
+            if (semantic_errors.empty()) std::cout << "sin errores semanticos.\n";
+            else std::cout << semantic_errors.size() << " error(es) semantico(s).\n";
             return semantic_errors.empty() ? 0 : 1;
         }
         if (errors_only) printErrors(result);

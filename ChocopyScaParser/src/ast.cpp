@@ -15,7 +15,7 @@ NodePtr newTokenNode(const std::string& tokenType, const std::string& lexeme, in
     return newNode(tokenType, lexeme, line);
 }
 
-// Los tokens de operadores llegan con su nombre (PLUS, EQ...); en el AST se guarda el símbolo
+// los tokens de operadores llegan con su nombre (PLUS, EQ...); en el AST se guarda el simbolo
 static std::string operatorSymbol(const std::string& tokenType) {
     static const std::map<std::string, std::string> symbols = {
         {"PLUS", "+"}, {"MINUS", "-"}, {"MULT", "*"}, {"INTDIV", "//"}, {"MOD", "%"},
@@ -25,8 +25,8 @@ static std::string operatorSymbol(const std::string& tokenType) {
     return found == symbols.end() ? tokenType : found->second;
 }
 
-// Cuelga de "firstOperand" las operaciones pendientes de "pendingOperations", de izquierda a derecha.
-// Cada operación recibe como primer hijo todo lo construido hasta ese momento:
+// cuelga de "firstOperand" las operaciones pendientes de "pendingOperations", de izquierda a derecha.
+// cada operacion recibe como primer hijo todo lo construido hasta ese momento:
 //   a.b(c)[d]  ->  Index( Call( Attr(a, b), c ), d )
 static NodePtr applyPendingOperations(const NodePtr& firstOperand, const NodePtr& pendingOperations) {
     NodePtr builtNode = firstOperand;
@@ -53,7 +53,7 @@ NodePtr buildNodeFromProduction(const std::string& lhsSymbol, const std::vector<
                                 const std::vector<NodePtr>& rhsNodes) {
     const size_t rhsSize = rhsSymbols.size();
 
-    // Listas: "lista -> lista elemento" o "lista -> elemento" (a veces con una coma en medio)
+    // listas: "lista -> lista elemento" o "lista -> elemento" (a veces con una coma en medio)
     static const std::set<std::string> listSymbolNames = {
         "def_list", "stmt_list", "stmt_list_plus", "class_body_defs", "func_body_decls",
         "typed_var_list", "elif_list", "expr_list"};
@@ -70,11 +70,11 @@ NodePtr buildNodeFromProduction(const std::string& lhsSymbol, const std::vector<
         return listNode;
     }
 
-    // Partes opcionales: sin contenido son una lista vacía (o nada)
+    // partes opcionales: sin contenido son una lista vacia (o nada)
     if (lhsSymbol == "typed_var_list_opt" || lhsSymbol == "expr_list_opt") return rhsSize == 0 ? newNode("List") : rhsNodes[0];
     if (lhsSymbol == "return_type_opt" || lhsSymbol == "expr_opt") return rhsSize == 0 ? nullptr : rhsNodes[rhsSize - 1];
 
-    // Operaciones pendientes de un postfijo (.x, [i], (args)) o de una comparación
+    // operaciones pendientes de un postfijo (.x, [i], (args)) o de una comparacion
     if (lhsSymbol == "postfix_tail" || lhsSymbol == "comparison_tail") {
         NodePtr pendingOperations = (rhsSize == 0) ? newNode("List") : rhsNodes.back();
         if (rhsSize == 0) return pendingOperations;
@@ -96,7 +96,7 @@ NodePtr buildNodeFromProduction(const std::string& lhsSymbol, const std::vector<
     }
     if (lhsSymbol == "postfix" || lhsSymbol == "comparison") return applyPendingOperations(rhsNodes[0], rhsNodes[1]);
 
-    // Programa, clases y funciones
+    // programa, clases y funciones
     if (lhsSymbol == "program") {
         NodePtr programNode = newNode("Program", "", 1);
         programNode->children = rhsNodes[0]->children;
@@ -125,7 +125,7 @@ NodePtr buildNodeFromProduction(const std::string& lhsSymbol, const std::vector<
         return bodyNode;
     }
 
-    // Declaraciones
+    // declaraciones
     if (lhsSymbol == "typed_var") {   // TYPED_ID COLON type
         NodePtr paramNode = newNode("Param", rhsNodes[0]->text, rhsNodes[0]->line);
         paramNode->type = rhsNodes[2]->text;
@@ -144,7 +144,7 @@ NodePtr buildNodeFromProduction(const std::string& lhsSymbol, const std::vector<
     if (lhsSymbol == "global_decl") return newNode("Global", rhsNodes[1]->text, rhsNodes[0]->line);
     if (lhsSymbol == "nonlocal_decl") return newNode("Nonlocal", rhsNodes[1]->text, rhsNodes[0]->line);
 
-    // Sentencias
+    // sentencias
     if (lhsSymbol == "stmt") {
         if (rhsSize == 2) return rhsNodes[0];   // simple_stmt NEWLINE
         if (rhsSymbols[0] == "IF") {        // IF expr COLON block elif_list else_opt
@@ -187,7 +187,7 @@ NodePtr buildNodeFromProduction(const std::string& lhsSymbol, const std::vector<
         return makeAssignNode(rhsNodes[0], rhsNodes[2], rhsNodes[1]->line);
     }
 
-    // Expresiones
+    // expresiones
     if (lhsSymbol == "conditional_expr" && rhsSize == 5) {   // or_expr IF expr ELSE conditional_expr
         NodePtr ifExprNode = newNode("IfExpr", "", rhsNodes[1]->line);
         ifExprNode->children = {rhsNodes[0], rhsNodes[2], rhsNodes[4]};
@@ -223,7 +223,7 @@ NodePtr buildNodeFromProduction(const std::string& lhsSymbol, const std::vector<
         return newNode("Str", rhsNodes[0]->text, rhsNodes[0]->line);   // STRING o IDSTRING
     }
 
-    // Reglas que solo pasan el nodo de su único símbolo (expr -> conditional_expr, def -> var_def...)
+    // reglas que solo pasan el nodo de su unico simbolo (expr -> conditional_expr, def -> var_def...)
     if (rhsSize == 1) return rhsNodes[0];
 
     NodePtr genericNode = newNode(lhsSymbol);
@@ -236,7 +236,7 @@ void printAst(const NodePtr& node, std::ostream& out, int depth) {
     out << std::string(static_cast<size_t>(depth) * 2, ' ') << node->kind;
     if (!node->text.empty()) out << ' ' << node->text;
     if (!node->type.empty()) out << " : " << node->type;
-    if (node->line > 0) out << "  (línea " << node->line << ")";
+    if (node->line > 0) out << "  (linea " << node->line << ")";
     out << '\n';
     for (const NodePtr& child : node->children) printAst(child, out, depth + 1);
 }
