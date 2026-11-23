@@ -616,11 +616,11 @@ ParseResult Parser::parseWithPanicRecovery(
             symbol_stack.push_back(grammar[production_index].left);
 
             // AST: los nodos de los símbolos reducidos pasan a ser los hijos del nodo nuevo
-            const std::vector<NodePtr> children(value_stack.end() - static_cast<std::ptrdiff_t>(rhs.size()),
+            const std::vector<NodePtr> reduced_symbol_nodes(value_stack.end() - static_cast<std::ptrdiff_t>(rhs.size()),
                                                 value_stack.end());
             value_stack.resize(value_stack.size() - rhs.size());
             value_stack.push_back(result.syntax_errors == 0
-                                      ? buildNode(grammar[production_index].left, rhs, children)
+                                      ? buildNodeFromProduction(grammar[production_index].left, rhs, reduced_symbol_nodes)
                                       : nullptr);
             continue;
         }

@@ -57,10 +57,10 @@ NodePtr newNode(const std::string& kind, const std::string& text = "", int line 
 // Nodo para un token que el parser acaba de desplazar (kind = tipo del token, text = su lexema)
 NodePtr newTokenNode(const std::string& tokenType, const std::string& lexeme, int line);
 
-// Se llama cada vez que el parser reduce una producción "left -> right". "children" son los
-// nodos de los símbolos de "right", en el mismo orden. Devuelve el nodo de "left".
-NodePtr buildNode(const std::string& left, const std::vector<std::string>& right,
-                  const std::vector<NodePtr>& children);
+// Se llama cada vez que el parser reduce una producción "lhsSymbol -> rhsSymbols". "rhsNodes" son los
+// nodos de los símbolos del lado derecho, en el mismo orden. Devuelve el nodo del lado izquierdo.
+NodePtr buildNodeFromProduction(const std::string& lhsSymbol, const std::vector<std::string>& rhsSymbols,
+                                const std::vector<NodePtr>& rhsNodes);
 
 // Imprime el árbol con una sangría de dos espacios por nivel
 void printAst(const NodePtr& node, std::ostream& out, int depth = 0);

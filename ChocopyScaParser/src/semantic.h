@@ -16,41 +16,41 @@ public:
     SemanticChecker();
 
     // Devuelve los errores encontrados, cada uno con su línea (vacío si el programa es correcto)
-    std::vector<std::string> check(const NodePtr& program);
+    std::vector<std::string> checkProgram(const NodePtr& program);
 
 private:
     // Tablas de símbolos
-    Scope* openScope(const std::string& name, Scope* parent);
-    void declareClasses(const NodePtr& program);
-    void declareNames(const NodePtr& container);
-    void declareOuterNames(const NodePtr& body);
+    Scope* createScope(const std::string& scopeName, Scope* parentScope);
+    void declareClassNames(const NodePtr& program);
+    void declareNamesInScope(const NodePtr& container);
+    void declareGlobalAndNonlocalNames(const NodePtr& body);
 
     // Recorrido
-    void checkBody(const NodePtr& container);
-    void checkFunction(const NodePtr& function);
+    void checkBodyContents(const NodePtr& container);
+    void checkFunctionDefinition(const NodePtr& function);
     void checkStatement(const NodePtr& statement);
-    void checkBlock(const NodePtr& block);
-    void checkCondition(const NodePtr& condition, const std::string& where);
-    std::string checkTarget(const NodePtr& target);
+    void checkBlockStatements(const NodePtr& block);
+    void checkBooleanCondition(const NodePtr& conditionNode, const std::string& statementName);
+    std::string checkAssignmentTarget(const NodePtr& target);
 
     // Expresiones: devuelven su tipo y lo guardan en node->type
-    std::string checkExpr(const NodePtr& node);
-    std::string checkBinOp(const NodePtr& node);
-    std::string checkCall(const NodePtr& node);
+    std::string checkExpression(const NodePtr& node);
+    std::string checkBinaryOperation(const NodePtr& node);
+    std::string checkFunctionCall(const NodePtr& node);
 
     // Tipos
-    bool isAssignable(const std::string& from, const std::string& to);
-    void validateType(const std::string& type, int line);
-    Symbol* findMember(const std::string& className, const std::string& memberName);
+    bool isAssignable(const std::string& sourceType, const std::string& targetType);
+    void checkTypeExists(const std::string& typeName, int line);
+    Symbol* findClassMember(const std::string& className, const std::string& memberName);
 
-    void error(int line, const std::string& message);
+    void reportError(int line, const std::string& message);
 
-    std::vector<std::unique_ptr<Scope>> allScopes;   // dueña de todas las tablas
+    std::vector<std::unique_ptr<Scope>> ownedScopes;   // dueña de todas las tablas
     Scope* globalScope = nullptr;
     Scope* currentScope = nullptr;
-    std::string currentReturnType;                    // tipo de retorno de la función que se revisa
-    bool insideFunction = false;
-    std::vector<std::string> errors;
+    std::string expectedReturnType;                    // tipo de retorno de la función que se revisa
+    bool isInsideFunction = false;
+    std::vector<std::string> collectedErrors;
 };
 
 #endif

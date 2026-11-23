@@ -245,7 +245,7 @@ int main(int argc, char* argv[]) {
             if (lexical_errors > 0 || result.aborted || result.syntax_errors > 0 || !result.ast) return 1;
 
             SemanticChecker checker;
-            const std::vector<std::string> semantic_errors = checker.check(result.ast);
+            const std::vector<std::string> semantic_errors = checker.checkProgram(result.ast);
             std::cout << "--- AST (con los tipos que halló el chequeo) ---\n";
             printAst(result.ast, std::cout);
             std::cout << "\n--- Chequeo semántico ---\n";
