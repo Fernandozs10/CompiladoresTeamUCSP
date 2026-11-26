@@ -26,6 +26,16 @@ static Symbol createSymbol(const std::string& name, const std::string& kind, con
     return symbol;
 }
 
+// tipo del nombre de una funcion: "(int, str) -> bool". en un metodo no se cuenta self
+static std::string functionSignature(const Symbol& function, size_t selfParameterCount) {
+    std::string signature = "(";
+    for (size_t i = selfParameterCount; i < function.parameterTypes.size(); ++i) {
+        if (i > selfParameterCount) signature += ", ";
+        signature += function.parameterTypes[i];
+    }
+    return signature + ") -> " + function.type;
+}
+
 SemanticChecker::SemanticChecker() {
     globalScope = createScope("global", nullptr);
     currentScope = globalScope;
@@ -421,6 +431,7 @@ std::string SemanticChecker::checkFunctionCall(const NodePtr& node) {
 
     Symbol* function = nullptr;
     size_t selfParameterCount = 0;   // en un metodo el primer parametro es self y no se pasa
+    callee->type = ERROR_TYPE;       // se reemplaza por la firma cuando se encuentra la funcion
     if (callee->kind == "Id") {
         Symbol* symbol = currentScope->lookupThroughParents(callee->text);
         if (symbol == nullptr) {
@@ -431,6 +442,7 @@ std::string SemanticChecker::checkFunctionCall(const NodePtr& node) {
             if (argumentCount != 0) {
                 reportError(node->line, "el constructor de '" + callee->text + "' no recibe argumentos");
             }
+            callee->type = "() -> " + symbol->name;
             return symbol->name;
         }
         if (symbol->kind != "func") {
@@ -452,6 +464,8 @@ std::string SemanticChecker::checkFunctionCall(const NodePtr& node) {
         reportError(node->line, "esta expresion no se puede llamar");
         return ERROR_TYPE;
     }
+
+    callee->type = functionSignature(*function, selfParameterCount);
 
     const size_t expectedCount = function->parameterTypes.size() - selfParameterCount;
     if (argumentCount != expectedCount) {

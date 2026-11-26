@@ -119,9 +119,11 @@ NodePtr buildNodeFromProduction(const std::string& lhsSymbol, const std::vector<
         return funcDefNode;
     }
     if (lhsSymbol == "func_body") {
-        NodePtr bodyNode = newNode("Body", "", rhsNodes[0]->line);
+        NodePtr bodyNode = newNode("Body");
         bodyNode->children = rhsNodes[0]->children;
         for (const NodePtr& statement : rhsNodes[1]->children) bodyNode->children.push_back(statement);
+        // las listas no tienen linea: el cuerpo usa la de su primera declaracion o sentencia
+        bodyNode->line = bodyNode->children.front()->line;
         return bodyNode;
     }
 

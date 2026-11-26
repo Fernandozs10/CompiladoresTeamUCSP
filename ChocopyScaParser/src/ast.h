@@ -40,6 +40,7 @@
 //   Call                              tipo del resultado   [funcion, argumento1, argumento2, ...]
 //
 // "line" es la linea del codigo fuente. "type" lo llena el chequeo semantico en las expresiones.
+// en el Id o Attr que se llama en un Call, "type" es la firma de la funcion: "(int) -> str".
 
 struct Node;
 using NodePtr = std::shared_ptr<Node>;
